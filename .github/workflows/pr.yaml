@@ -1,0 +1,22 @@
+
+name: Build
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  draft-check:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == true
+    steps:
+      - run: echo "We do not check draft pr" && exit 1
+
+  build-image:
+    runs-on: self-hosted
+    if: github.event.pull_request.draft == false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+      - name: Build
+        run: make build
