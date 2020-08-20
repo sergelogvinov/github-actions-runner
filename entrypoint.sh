@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 if [[ -z $RUNNER_NAME ]]; then
     export RUNNER_NAME=`hostname`
