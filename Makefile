@@ -9,6 +9,7 @@ REGISTRY?=docker.pkg.github.com/sergelogvinov/github-actions-runner
 RUNNER_REPOSITORY_URL?=https://github.com/sergelogvinov/github-actions-runner
 RUNNER_TOKEN?=
 DOCKER_HOST?=
+HELM_PARAMS?=
 
 #
 
@@ -35,7 +36,10 @@ push: ## Push image to registry
 
 
 deploy: ## Deploy to k8s
-	helm upgrade -i -f .helm/github-actions/values-dev.yaml \
+	helm upgrade -i $(HELM_PARAMS) -f .helm/github-actions/values-dev.yaml \
+		--history-max 3 \
+		--reuse-values \
+		--set image.tag=$(CODE_TAG) \
 		github-actions .helm/github-actions/
 
 

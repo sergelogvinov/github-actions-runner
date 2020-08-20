@@ -1,6 +1,6 @@
 
-envs:
-  RUNNER_TOKEN: ---
+# envs:
+#   RUNNER_TOKEN: ---
 
 imagePullSecrets:
   - name: github-registry
