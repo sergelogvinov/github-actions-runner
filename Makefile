@@ -8,6 +8,7 @@ CODE_TAG?=$(shell git describe --exact-match --tags 2>/dev/null || git branch 2>
 REGISTRY?=docker.pkg.github.com/sergelogvinov/github-actions-runner
 RUNNER_REPOSITORY_URL?=https://github.com/sergelogvinov/github-actions-runner
 RUNNER_TOKEN?=
+DOCKER_HOST?=
 
 #
 
@@ -24,6 +25,7 @@ run: ## Run locally
 	docker run --rm -ti --name github-actions-runner -h local \
 		-e RUNNER_REPOSITORY_URL=$(RUNNER_REPOSITORY_URL) \
 		-e RUNNER_TOKEN=$(RUNNER_TOKEN) \
+		-e DOCKER_HOST=$(DOCKER_HOST) \
 		local/github-actions-runner:$(CODE_TAG)
 
 
