@@ -29,7 +29,16 @@ run: ## Run locally
 		local/github-actions-runner:$(CODE_TAG)
 
 
-push:
+push: ## Push image to registry
 	docker tag local/github-actions-runner:$(CODE_TAG) $(REGISTRY)/github-actions-runner:$(CODE_TAG)
 	docker push $(REGISTRY)/github-actions-runner:$(CODE_TAG)
 
+
+deploy: ## Deploy to k8s
+	helm upgrade -i -f .helm/github-actions/values-dev.yaml \
+		github-actions .helm/github-actions/
+
+
+github-auth: ## Create k8s docker registry secret
+	kubectl create secret docker-registry github-registry --docker-server=docker.pkg.github.com \
+		--docker-username=$(GITHUB_ACTOR) --docker-password=$(GITHUB_TOKEN)
