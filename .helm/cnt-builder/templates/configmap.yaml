@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "cnt-builder.fullname" . }}
+  labels:
+    {{- include "cnt-builder.labels" . | nindent 4 }}
+data:
+  buildkitd.toml: |-
+    {{ .Values.buildkit.configData | nindent 4 }}
+  daemon.json: |-
+    {{ .Values.docker.configData | nindent 4 }}

@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "cnt-builder.fullname" . }}
+  labels:
+    {{- include "cnt-builder.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+  {{- if .Values.buildkit.enabled }}
+    - port: {{ .Values.service.buildkit.port }}
+      targetPort: buildkit
+      protocol: TCP
+      name: buildkit
+  {{- end }}
+  {{- if .Values.docker.enabled }}
+    - port: {{ .Values.service.docker.port }}
+      targetPort: docker
+      protocol: TCP
+      name: docker
+  {{- end }}
+  selector:
+    {{- include "cnt-builder.selectorLabels" . | nindent 4 }}

@@ -18,7 +18,10 @@ help:
 
 
 build: ## Build project
-	docker build $(BUILDARG) --rm -t local/github-actions-runner:$(CODE_TAG) -f Dockerfile .
+	docker build $(BUILDARG) --rm -t local/github-actions-runner:$(CODE_TAG) \
+		-f Dockerfile --target=github-actions-runner .
+	docker build $(BUILDARG) --rm -t local/docker:$(CODE_TAG) \
+		-f Dockerfile --target=docker-host .
 
 
 run: ## Run locally
@@ -34,13 +37,20 @@ push: ## Push image to registry
 	docker tag local/github-actions-runner:$(CODE_TAG) $(REGISTRY)/github-actions-runner:$(CODE_TAG)
 	docker push $(REGISTRY)/github-actions-runner:$(CODE_TAG)
 
+	docker tag local/docker:$(CODE_TAG) $(REGISTRY)/docker:$(CODE_TAG)
+	docker push $(REGISTRY)/docker:$(CODE_TAG)
+
 
 deploy: ## Deploy to k8s
-	helm upgrade -i $(HELM_PARAMS) -f .helm/github-actions/values-dev.yaml \
+	helm upgrade -i $(HELM_PARAMS) -f .helm/cnt-builder/values-dev.yaml \
 		--history-max 3 \
-		--reuse-values \
-		--set image.tag=$(CODE_TAG) \
-		github-actions .helm/github-actions/
+		cnt-builder .helm/cnt-builder/
+
+	# helm upgrade -i $(HELM_PARAMS) -f .helm/github-actions/values-dev.yaml \
+	# 	--history-max 3 \
+	# 	--reuse-values \
+	# 	--set image.tag=$(CODE_TAG) \
+	# 	github-actions .helm/github-actions/
 
 
 github-auth: ## Create k8s docker registry secret
