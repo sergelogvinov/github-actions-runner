@@ -10,7 +10,7 @@ fullnameOverride: ""
 
 
 buildkit:
-  enabled: true
+  enabled: false
   image:
     repository: moby/buildkit
     pullPolicy: IfNotPresent
