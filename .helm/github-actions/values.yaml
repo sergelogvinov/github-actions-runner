@@ -10,7 +10,8 @@ image:
   tag: "release_v2.272.0-1"
 
 envs:
-  DOCKER_HOST: tcp://docker-server:2376
+  DOCKER_HOST: tcp://cnt-builder:2376
+  BUILDKIT_HOST: tcp://cnt-builder:1234
   RUNNER_REPOSITORY_URL: https://github.com/sergelogvinov/github-actions-runner
   # RUNNER_TOKEN: ''
   # GITHUB_ACCESS_TOKEN: ''
@@ -63,6 +64,25 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+extraVolumeMounts: []
+## Additional volumeMounts to the main container.
+#   - name: tlscerts
+#     mountPath: /home/github/.docker
+
+extraVolumes: []
+## Additional volumes to the pod.
+#   - name: tlscerts
+#     secret:
+#       secretName: cnt-builder
+#       defaultMode: 256
+#       items:
+#         - key: ca.crt
+#           path: ca.pem
+#         - key: tls.crt
+#           path: cert.pem
+#         - key: tls.key
+#           path: key.pem
 
 persistence:
   enabled: false

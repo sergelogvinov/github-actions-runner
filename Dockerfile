@@ -6,7 +6,21 @@ RUN git clone --single-branch --branch 0.24.3 --depth 1 https://github.com/immor
 RUN make build-linux
 
 #
-FROM debian:buster
+FROM alpine:3.12 AS docker-host
+
+RUN apk --update add docker device-mapper && \
+    mkdir /root/.docker && \
+    ln -s /etc/docker-tlscerts/ca.crt   /root/.docker/ca.pem    && \
+    ln -s /etc/docker-tlscerts/tls.crt  /root/.docker/cert.pem  && \
+    ln -s /etc/docker-tlscerts/tls.key  /root/.docker/key.pem
+
+ENV DOCKER_HOST=tcp://127.0.0.1:2376
+
+VOLUME ["/var/lib/docker"]
+ENTRYPOINT ["/usr/bin/dockerd","-H","tcp://0.0.0.0:2376"]
+
+#
+FROM debian:buster AS github-actions-runner
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     apt-get install -y --no-install-recommends software-properties-common procps vim-tiny \

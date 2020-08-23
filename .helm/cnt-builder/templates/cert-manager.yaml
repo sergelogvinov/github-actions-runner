@@ -1,0 +1,28 @@
+{{- if .Values.tlsCerts.create }}
+apiVersion: cert-manager.io/v1alpha2
+kind: Issuer
+metadata:
+  name: {{ include "cnt-builder.fullname" . }}-issuer
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1alpha2
+kind: Certificate
+metadata:
+  name: {{ include "cnt-builder.fullname" . }}
+spec:
+  secretName: {{ include "cnt-builder.tlsCerts" . }}
+  issuerRef:
+    name: {{ include "cnt-builder.fullname" . }}-issuer
+    kind: Issuer
+  commonName: {{ include "cnt-builder.fullname" . }}
+  usages:
+    - server auth
+    - client auth
+  ipAddresses:
+    - 127.0.0.1
+  dnsNames:
+    - {{ include "cnt-builder.fullname" . }}
+    - {{ include "cnt-builder.fullname" . }}.{{ .Release.Namespace }}
+    - {{ include "cnt-builder.fullname" . }}.{{ .Release.Namespace }}.svc
+{{- end }}

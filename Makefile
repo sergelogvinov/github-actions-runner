@@ -18,7 +18,10 @@ help:
 
 
 build: ## Build project
-	docker build $(BUILDARG) --rm -t local/github-actions-runner:$(CODE_TAG) -f Dockerfile .
+	docker build $(BUILDARG) --rm -t local/github-actions-runner:$(CODE_TAG) \
+		-f Dockerfile --target=github-actions-runner .
+	docker build $(BUILDARG) --rm -t local/docker:$(CODE_TAG) \
+		-f Dockerfile --target=docker-host .
 
 
 run: ## Run locally
@@ -34,8 +37,18 @@ push: ## Push image to registry
 	docker tag local/github-actions-runner:$(CODE_TAG) $(REGISTRY)/github-actions-runner:$(CODE_TAG)
 	docker push $(REGISTRY)/github-actions-runner:$(CODE_TAG)
 
+	docker tag local/docker:$(CODE_TAG) $(REGISTRY)/docker:$(CODE_TAG)
+	docker push $(REGISTRY)/docker:$(CODE_TAG)
+
 
 deploy: ## Deploy to k8s
+	touch .helm/cnt-builder/values-dev.yaml
+	helm upgrade -i $(HELM_PARAMS) -f .helm/cnt-builder/values-dev.yaml \
+		--history-max 3 \
+		--set docker.image.tag=$(CODE_TAG) \
+		cnt-builder .helm/cnt-builder/
+
+	touch .helm/github-actions/values-dev.yaml
 	helm upgrade -i $(HELM_PARAMS) -f .helm/github-actions/values-dev.yaml \
 		--history-max 3 \
 		--reuse-values \

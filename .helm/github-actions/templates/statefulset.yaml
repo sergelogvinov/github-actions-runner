@@ -46,6 +46,9 @@ spec:
             - secretRef:
                 name: "{{ include "github-actions.fullname" . }}"
           volumeMounts:
+          {{- if .Values.extraVolumeMounts }}
+            {{ toYaml .Values.extraVolumeMounts | nindent 12 }}
+          {{- end }}
             - name: workdir
               mountPath: /builds
           resources:
@@ -62,12 +65,14 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-  {{- if not .Values.persistence.enabled }}
       volumes:
+      {{- if .Values.extraVolumes }}
+        {{ toYaml .Values.extraVolumes | nindent 8 }}
+      {{- end }}
+  {{- if not .Values.persistence.enabled }}
         - name: workdir
           emptyDir: {}
   {{- else if and .Values.persistence.enabled .Values.persistence.existingClaim }}
-      volumes:
         - name: workdir
           persistentVolumeClaim:
             claimName: {{ .Values.persistence.existingClaim }}

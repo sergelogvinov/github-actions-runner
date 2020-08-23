@@ -1,0 +1,161 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cnt-builder.fullname" . }}
+  labels:
+    {{- include "cnt-builder.labels" . | nindent 4 }}
+spec:
+{{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+{{- end }}
+  selector:
+    matchLabels:
+      {{- include "cnt-builder.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+    {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        {{- include "cnt-builder.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      enableServiceLinks: false
+      serviceAccountName: {{ include "cnt-builder.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+      {{- if .Values.buildkit.enabled }}
+        - name: buildkit
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.buildkit.image.repository }}:{{ .Values.buildkit.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.buildkit.image.pullPolicy }}
+          args:
+            - --addr
+            - unix:///run/buildkit/buildkitd.sock
+            - --addr
+            - tcp://0.0.0.0:1234
+          ports:
+            - name: buildkit
+              containerPort: 1234
+              protocol: TCP
+          livenessProbe:
+            exec:
+              command:
+                - buildctl
+                - debug
+                - workers
+            initialDelaySeconds: 5
+            periodSeconds: 60
+          volumeMounts:
+            - name: config
+              mountPath: /etc/buildkit
+          {{- if or .Values.tlsCerts.create .Values.tlsCerts.name }}
+            - name: tlscerts
+              mountPath: /etc/buildkit-tlscerts
+          {{- end }}
+          {{- range .Values.buildkit.extraMounts }}
+            - name: {{ .name }}
+              mountPath: {{ .mountPath }}
+          {{- end }}
+            - name: workdir
+              mountPath: /var/lib/buildkit
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- end }}
+      {{- if .Values.docker.enabled }}
+        - name: docker
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.docker.image.repository }}:{{ .Values.docker.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.docker.image.pullPolicy }}
+          args: ["--config-file","/etc/docker-config/daemon.json"]
+          env:
+            - name: DOCKER_HOST
+              value: tcp://127.0.0.1:2376
+          {{- if or .Values.tlsCerts.create .Values.tlsCerts.name }}
+            - name: DOCKER_TLS_VERIFY
+              value: "1"
+          {{- end }}
+          ports:
+            - name: docker
+              containerPort: 2376
+              protocol: TCP
+          volumeMounts:
+            - name: config
+              mountPath: /etc/docker-config
+          {{- if or .Values.tlsCerts.create .Values.tlsCerts.name }}
+            - name: tlscerts
+              mountPath: /etc/docker-tlscerts
+          {{- end }}
+          {{- range .Values.docker.extraMounts }}
+            - name: {{ .name }}
+              mountPath: {{ .mountPath }}
+          {{- end }}
+            - name: workdir
+              mountPath: /var/lib/docker
+            - name: modules
+              mountPath: /lib/modules
+              readOnly: true
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "cnt-builder.fullname" . }}
+      {{- if or .Values.tlsCerts.create .Values.tlsCerts.name }}
+        - name: tlscerts
+          secret:
+            secretName: {{ include "cnt-builder.tlsCerts" . }}
+      {{- end }}
+      {{- if .Values.buildkit.enabled }}
+        {{- range .Values.buildkit.extraMounts }}
+        - name: {{ .name }}
+          {{- if .hostPath }}
+          hostPath:
+            path: {{ .hostPath }}
+          {{- else }}
+          configMap:
+            name: {{ .configMap }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+      {{- if .Values.docker.enabled }}
+        {{- range .Values.docker.extraMounts }}
+        - name: {{ .name }}
+          {{- if .hostPath }}
+          hostPath:
+            path: {{ .hostPath }}
+          {{- else }}
+          configMap:
+            name: {{ .configMap }}
+          {{- end }}
+        {{- end }}
+        - name: modules
+          hostPath:
+            path: /lib/modules
+      {{- end }}
+      {{- if not .Values.persistence.enabled }}
+        - name: workdir
+          emptyDir: {}
+      {{- else if and .Values.persistence.enabled .Values.persistence.existingClaim }}
+        - name: workdir
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.existingClaim }}
+      {{- end }}
