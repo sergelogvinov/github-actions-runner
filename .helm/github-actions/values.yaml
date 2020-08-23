@@ -65,6 +65,25 @@ tolerations: []
 
 affinity: {}
 
+extraVolumeMounts: []
+## Additional volumeMounts to the main container.
+#   - name: tlscerts
+#     mountPath: /home/github/.docker
+
+extraVolumes: []
+## Additional volumes to the pod.
+#   - name: tlscerts
+#     secret:
+#       secretName: cnt-builder
+#       defaultMode: 256
+#       items:
+#         - key: ca.crt
+#           path: ca.pem
+#         - key: tls.crt
+#           path: cert.pem
+#         - key: tls.key
+#           path: key.pem
+
 persistence:
   enabled: false
   ## A manually managed Persistent Volume and Claim
