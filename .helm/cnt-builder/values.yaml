@@ -114,3 +114,8 @@ persistence:
     - ReadWriteOnce
   size: 10Gi
   annotations: {}
+
+## updateStrategy for StatefulSet
+## ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies
+updateStrategy:
+  type: RollingUpdate

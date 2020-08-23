@@ -1,13 +1,17 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: {{ include "cnt-builder.fullname" . }}
   labels:
     {{- include "cnt-builder.labels" . | nindent 4 }}
 spec:
+  serviceName: {{ include "cnt-builder.fullname" . }}
 {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
 {{- end }}
+  updateStrategy:
+    type: {{ .Values.updateStrategy.type }}
+  # progressDeadlineSeconds: 3600
   selector:
     matchLabels:
       {{- include "cnt-builder.selectorLabels" . | nindent 6 }}
@@ -20,11 +24,11 @@ spec:
       labels:
         {{- include "cnt-builder.selectorLabels" . | nindent 8 }}
     spec:
+      enableServiceLinks: false
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      enableServiceLinks: false
       serviceAccountName: {{ include "cnt-builder.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
@@ -151,11 +155,36 @@ spec:
           hostPath:
             path: /lib/modules
       {{- end }}
-      {{- if not .Values.persistence.enabled }}
+  {{- if not .Values.persistence.enabled }}
         - name: workdir
           emptyDir: {}
-      {{- else if and .Values.persistence.enabled .Values.persistence.existingClaim }}
+  {{- else if and .Values.persistence.enabled .Values.persistence.existingClaim }}
         - name: workdir
           persistentVolumeClaim:
             claimName: {{ .Values.persistence.existingClaim }}
+  {{- else }}
+  volumeClaimTemplates:
+    - metadata:
+        name: workdir
+      {{- with .Values.persistence.annotations }}
+        annotations:
+        {{- range $key, $value := . }}
+          {{ $key }}: {{ $value }}
+        {{- end }}
       {{- end }}
+      spec:
+        accessModes:
+        {{- range .Values.persistence.accessModes }}
+          - {{ . | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.size | quote }}
+      {{- if .Values.persistence.storageClass }}
+      {{- if (eq "-" .Values.persistence.storageClass) }}
+        storageClassName: ""
+      {{- else }}
+        storageClassName: "{{ .Values.persistence.storageClass }}"
+      {{- end }}
+      {{- end }}
+  {{- end }}
