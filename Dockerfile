@@ -51,7 +51,7 @@ RUN wget https://dl.k8s.io/v1.18.8/kubernetes-client-linux-amd64.tar.gz -O /tmp/
 USER github
 WORKDIR /app
 
-ENV GITHUB_VERSION=2.272.0
+ENV GITHUB_VERSION=2.273.0
 RUN curl -L -O https://github.com/actions/runner/releases/download/v${GITHUB_VERSION}/actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz && \
     tar xzf ./actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz && \
     rm actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz && \
