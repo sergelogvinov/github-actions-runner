@@ -40,7 +40,7 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
-            - name: RUNNER_WORK_DIRECTORY
+            - name: RUNNER_WORK_FOLDER
               value: /builds
           envFrom:
             - secretRef:
