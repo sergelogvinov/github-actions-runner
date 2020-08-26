@@ -106,6 +106,8 @@ spec:
             - name: modules
               mountPath: /lib/modules
               readOnly: true
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
       {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
