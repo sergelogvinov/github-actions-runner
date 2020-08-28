@@ -6,6 +6,7 @@ metadata:
     {{- include "cnt-builder.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
+  sessionAffinity: ClientIP
   ports:
   {{- if .Values.buildkit.enabled }}
     - port: {{ .Values.service.buildkit.port }}
