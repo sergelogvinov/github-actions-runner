@@ -1,0 +1,10 @@
+#
+
+{{- if .Values.tlsCerts.create }}
+
+kubectl -n {{ .Release.Namespace }} get secrets {{ include "build-machine.tlsCerts" . }} -o jsonpath="{.data.ca\.crt}"  | base64 --decode > ~/.docker/ca.pem
+kubectl -n {{ .Release.Namespace }} get secrets {{ include "build-machine.tlsCerts" . }} -o jsonpath="{.data.tls\.crt}" | base64 --decode > ~/.docker/cert.pem
+kubectl -n {{ .Release.Namespace }} get secrets {{ include "build-machine.tlsCerts" . }} -o jsonpath="{.data.tls\.key}" | base64 --decode > ~/.docker/key.pem
+
+{{- end }}
+

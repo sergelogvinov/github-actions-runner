@@ -1,11 +1,11 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ include "cnt-builder.fullname" . }}
+  name: {{ include "build-machine.fullname" . }}
   labels:
-    {{- include "cnt-builder.labels" . | nindent 4 }}
+    {{- include "build-machine.labels" . | nindent 4 }}
 spec:
-  serviceName: {{ include "cnt-builder.fullname" . }}
+  serviceName: {{ include "build-machine.fullname" . }}
 {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
 {{- end }}
@@ -14,7 +14,7 @@ spec:
   # progressDeadlineSeconds: 3600
   selector:
     matchLabels:
-      {{- include "cnt-builder.selectorLabels" . | nindent 6 }}
+      {{- include "build-machine.selectorLabels" . | nindent 6 }}
   template:
     metadata:
     {{- with .Values.podAnnotations }}
@@ -22,14 +22,14 @@ spec:
         {{- toYaml . | nindent 8 }}
     {{- end }}
       labels:
-        {{- include "cnt-builder.selectorLabels" . | nindent 8 }}
+        {{- include "build-machine.selectorLabels" . | nindent 8 }}
     spec:
       enableServiceLinks: false
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "cnt-builder.serviceAccountName" . }}
+      serviceAccountName: {{ include "build-machine.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
@@ -124,11 +124,11 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: {{ include "cnt-builder.fullname" . }}
+            name: {{ include "build-machine.fullname" . }}
       {{- if or .Values.tlsCerts.create .Values.tlsCerts.name }}
         - name: tlscerts
           secret:
-            secretName: {{ include "cnt-builder.tlsCerts" . }}
+            secretName: {{ include "build-machine.tlsCerts" . }}
       {{- end }}
       {{- if .Values.buildkit.enabled }}
         {{- range .Values.buildkit.extraMounts }}

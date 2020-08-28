@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "cnt-builder.fullname" . }}
+  name: {{ include "build-machine.fullname" . }}
   labels:
-    {{- include "cnt-builder.labels" . | nindent 4 }}
+    {{- include "build-machine.labels" . | nindent 4 }}
 data:
   buildkitd.toml: |-
     {{ .Values.buildkit.configData | nindent 4 }}

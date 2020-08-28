@@ -42,11 +42,11 @@ push: ## Push image to registry
 
 
 deploy: ## Deploy to k8s
-	touch .helm/cnt-builder/values-dev.yaml
-	helm upgrade -i $(HELM_PARAMS) -f .helm/cnt-builder/values-dev.yaml \
+	touch .helm/build-machine/values-dev.yaml
+	helm upgrade -i $(HELM_PARAMS) -f .helm/build-machine/values-dev.yaml \
 		--history-max 3 \
 		--set docker.image.tag=$(CODE_TAG) \
-		cnt-builder .helm/cnt-builder/
+		build-machine .helm/build-machine/
 
 	touch .helm/github-actions/values-dev.yaml
 	helm upgrade -i $(HELM_PARAMS) -f .helm/github-actions/values-dev.yaml \

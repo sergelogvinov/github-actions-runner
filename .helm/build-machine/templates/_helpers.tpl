@@ -1,7 +1,7 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "cnt-builder.name" -}}
+{{- define "build-machine.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
@@ -10,7 +10,7 @@ Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
-{{- define "cnt-builder.fullname" -}}
+{{- define "build-machine.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -26,16 +26,16 @@ If release name contains chart name it will be used as a full name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "cnt-builder.chart" -}}
+{{- define "build-machine.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "cnt-builder.labels" -}}
-helm.sh/chart: {{ include "cnt-builder.chart" . }}
-{{ include "cnt-builder.selectorLabels" . }}
+{{- define "build-machine.labels" -}}
+helm.sh/chart: {{ include "build-machine.chart" . }}
+{{ include "build-machine.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -45,17 +45,17 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "cnt-builder.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "cnt-builder.name" . }}
+{{- define "build-machine.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "build-machine.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
 Create the name of the tlsauth to use
 */}}
-{{- define "cnt-builder.tlsCerts" -}}
+{{- define "build-machine.tlsCerts" -}}
 {{- if .Values.tlsCerts.create }}
-{{- default (include "cnt-builder.fullname" .) .Values.tlsCerts.name }}
+{{- default (include "build-machine.fullname" .) .Values.tlsCerts.name }}
 {{- else }}
 {{- default "default" .Values.tlsCerts.name }}
 {{- end }}
@@ -64,9 +64,9 @@ Create the name of the tlsauth to use
 {{/*
 Create the name of the service account to use
 */}}
-{{- define "cnt-builder.serviceAccountName" -}}
+{{- define "build-machine.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
-{{- default (include "cnt-builder.fullname" .) .Values.serviceAccount.name }}
+{{- default (include "build-machine.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}

@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "cnt-builder.fullname" . }}
+  name: {{ include "build-machine.fullname" . }}
   labels:
-    {{- include "cnt-builder.labels" . | nindent 4 }}
+    {{- include "build-machine.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
   sessionAffinity: ClientIP
@@ -21,4 +21,4 @@ spec:
       name: docker
   {{- end }}
   selector:
-    {{- include "cnt-builder.selectorLabels" . | nindent 4 }}
+    {{- include "build-machine.selectorLabels" . | nindent 4 }}
