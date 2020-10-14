@@ -45,6 +45,49 @@ docker:
       "log-level": "warn"
     }
 
+registry:
+  enabled: false
+  name: cache.local
+  image:
+    repository: registry
+    pullPolicy: IfNotPresent
+    tag: 2.7
+
+  resources:
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 1
+    #   memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 32Mi
+
+  extraMounts: []
+
+  configData: |
+    version: 0.1
+    log:
+      accesslog:
+        disabled: true
+      level: warn
+      formatter: json
+    storage:
+      maintenance:
+        uploadpurging:
+          enabled: true
+          age: 168h
+          interval: 24h
+          dryrun: false
+      filesystem:
+        rootdirectory: /var/lib/registry
+        maxthreads: 100
+    http:
+      addr: 127.0.0.1:80
+      secret: secretforlocalcache
+
 tlsCerts:
   create: true
   name: ""

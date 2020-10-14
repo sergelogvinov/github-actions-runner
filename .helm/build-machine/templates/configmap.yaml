@@ -9,3 +9,5 @@ data:
     {{ .Values.buildkit.configData | nindent 4 }}
   daemon.json: |-
     {{ .Values.docker.configData | nindent 4 }}
+  config.yml: |-
+    {{ .Values.registry.configData | nindent 4 }}
