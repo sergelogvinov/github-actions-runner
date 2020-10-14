@@ -10,8 +10,8 @@ image:
   tag: "release_v2.273.0-1"
 
 envs:
-  DOCKER_HOST: tcp://cnt-builder:2376
-  BUILDKIT_HOST: tcp://cnt-builder:1234
+  DOCKER_HOST: tcp://build-machine:2376
+  BUILDKIT_HOST: tcp://build-machine:1234
   RUNNER_REPOSITORY_URL: https://github.com/sergelogvinov/github-actions-runner
   # RUNNER_TOKEN: ''
   # GITHUB_ACCESS_TOKEN: ''
