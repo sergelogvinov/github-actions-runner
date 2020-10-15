@@ -30,6 +30,7 @@ make push
 
 
 ## Run runner localy
+
 ```
 make build
 
@@ -38,3 +39,27 @@ export RUNNER_TOKEN=_TIKEN_
 export DOCKER_HOST=tcp://host:port
 make run
 ```
+
+## Run runner on k8s
+
+```
+cat <<EOF > .helm/build-machine/values-dev.yaml
+docker:
+  enabled: true
+
+registry:
+  enabled: true
+
+tlsCerts:
+  create: true
+EOF
+
+make deploy
+```
+
+Gighub-actions worker reseive tasks from server.
+Worker runs commands on docker host.
+Docker host has docker-registry on localhost.
+You can use __--cache-from__ to receive build cache from local registry.
+
+![Build-machine](docs/build–machine.svg)
