@@ -1,9 +1,11 @@
-name: Release Charts
 
+name: Release Charts
 on:
   push:
     branches:
       - master
+    paths:
+      - ".helm/**"
 
 jobs:
   release:

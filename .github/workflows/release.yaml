@@ -8,7 +8,6 @@ on:
 
 env:
   CODE_TAG: ${{ github.head_ref }}
-  REGISTRY: docker.pkg.github.com/${{ github.repository }}
 
 jobs:
   publish-release:
@@ -36,7 +35,11 @@ jobs:
           body: |
             Release labels: ${{ join(github.event.pull_request.labels.*.name) }}
 
-            docker pull ${{ env.REGISTRY }}/github-actions-runner:${{ env.CODE_TAG }}
+            docker pull docker.pkg.github.com/${{ github.repository }}/github-actions-runner:${{ env.CODE_TAG }}
+            docker pull docker.pkg.github.com/${{ github.repository }}/docker:${{ env.CODE_TAG }}
+            # or
+            docker pull sergelog/github-actions-runner:${{ env.CODE_TAG }}
+            docker pull sergelog/docker:${{ env.CODE_TAG }}
 
           prerelease: "!startsWith(github.head_ref, 'release_')"
 
@@ -50,11 +53,26 @@ jobs:
           ref: 'master'
       - name: Build
         run: make build
-      - name: Docker registry login
-        uses: azure/docker-login@v1
+
+      - name: Github registry login
+        uses: docker/login-action@v1
         with:
-          login-server: ${{ env.REGISTRY }}
+          registry: docker.pkg.github.com
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Push images to github
         run: make push
+        env:
+          REGISTRY: docker.pkg.github.com/${{ github.repository }}
+
+      - name: Docker registry login
+        uses: docker/login-action@v1
+        with:
+          username: sergelog
+          password: ${{ secrets.DOCKERIO_PASSWORD }}
+        env:
+          REGISTRY: sergelog
+      - name: Push images to docker hub
+        run: make push
+        env:
+          REGISTRY: sergelog
