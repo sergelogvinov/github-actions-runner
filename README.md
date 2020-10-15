@@ -57,7 +57,7 @@ EOF
 make deploy
 ```
 
-Gighub-actions worker reseive tasks from server.
+Gighub-actions worker receive tasks from server.
 Worker runs commands on docker host.
 Docker host has docker-registry on localhost.
 You can use __--cache-from__ to receive build cache from local registry.
