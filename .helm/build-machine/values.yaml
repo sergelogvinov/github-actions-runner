@@ -34,7 +34,7 @@ docker:
   image:
     repository: docker.pkg.github.com/sergelogvinov/github-actions-runner/docker
     pullPolicy: IfNotPresent
-    tag: "release_v2.273.5-1"
+    tag: "release_v2.274.2-1"
 
   extraMounts: []
 
