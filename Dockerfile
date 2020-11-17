@@ -43,22 +43,21 @@ RUN apt-get update && apt-get install -y docker.io yamllint && \
     mv /tmp/reviewdog /usr/bin/reviewdog && \
     rm -rf /tmp/*
 
-RUN wget https://dl.k8s.io/v1.19.3/kubernetes-client-linux-amd64.tar.gz -O /tmp/kubernetes-client-linux-amd64.tar.gz && \
+RUN wget https://dl.k8s.io/v1.19.4/kubernetes-client-linux-amd64.tar.gz -O /tmp/kubernetes-client-linux-amd64.tar.gz && \
     cd /tmp && tar -xzf /tmp/kubernetes-client-linux-amd64.tar.gz && mv kubernetes/client/bin/kubectl /usr/bin/kubectl && \
-    wget https://get.helm.sh/helm-v3.3.4-linux-amd64.tar.gz -O /tmp/helm.tar.gz && \
+    wget https://get.helm.sh/helm-v3.4.1-linux-amd64.tar.gz -O /tmp/helm.tar.gz && \
     cd /tmp && tar -xzf /tmp/helm.tar.gz && mv linux-amd64/helm /usr/bin/helm && rm -rf /tmp/*
 
 USER github
 WORKDIR /app
 
-ENV GITHUB_VERSION=2.273.5
+ENV GITHUB_VERSION=2.274.2
 RUN curl -L -O https://github.com/actions/runner/releases/download/v${GITHUB_VERSION}/actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz && \
     tar xzf ./actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz && \
     rm actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz && \
     sudo /app/bin/installdependencies.sh
 
-RUN helm repo add stable https://kubernetes-charts.storage.googleapis.com && \
-    helm repo add incubator https://kubernetes-charts-incubator.storage.googleapis.com
+RUN helm repo add stable https://charts.helm.sh/stable
 
 ENV RUNNER_WORK_FOLDER=/home/github/builds
 
