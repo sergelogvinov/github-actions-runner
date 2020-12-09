@@ -40,25 +40,6 @@ spec:
         - {{ .Values.registry.name }}
       {{- end }}
       containers:
-        - name: containerd
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.containerd.image.repository }}:{{ .Values.containerd.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.containerd.image.pullPolicy }}
-          args:
-            - --config=/etc/containerd/containerd.toml
-          volumeMounts:
-            - name: config
-              mountPath: /etc/containerd
-            - name: workdir
-              mountPath: /var/lib
-            - name: socket
-              mountPath: /run/containerd
-            - name: modules
-              mountPath: /lib/modules
-              readOnly: true
-          resources:
-            {{- toYaml .Values.resources | nindent 12 }}
       {{- if .Values.buildkit.enabled }}
         - name: buildkit
           securityContext:
@@ -67,6 +48,7 @@ spec:
           imagePullPolicy: {{ .Values.buildkit.image.pullPolicy }}
           args:
             - --config=/etc/buildkit/buildkitd.toml
+            - --addr=tcp://0.0.0.0:1234
             {{- if or .Values.tlsCerts.create .Values.tlsCerts.name }}
             - --tlscacert=/etc/buildkit-tlscerts/ca.crt
             - --tlscert=/etc/buildkit-tlscerts/tls.crt
@@ -100,8 +82,6 @@ spec:
           {{- end }}
             - name: workdir
               mountPath: /var/lib
-            - name: socket
-              mountPath: /run/containerd
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- end }}
@@ -112,14 +92,16 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.docker.image.repository }}:{{ .Values.docker.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.docker.image.pullPolicy }}
+          command: [{{ .Values.docker.command }}]
           args:
             - --config-file=/etc/docker-config/daemon.json
-            - --containerd=/run/containerd/containerd.sock
+            - -H unix:///var/run/docker.sock
+            - -H tcp://0.0.0.0:2376
             {{- if or .Values.tlsCerts.create .Values.tlsCerts.name }}
             - --tlsverify
-            - --tlscacert=/etc/docker-tlscerts/ca.crt
-            - --tlscert=/etc/docker-tlscerts/tls.crt
-            - --tlskey=/etc/docker-tlscerts/tls.key
+            - --tlscacert=/etc/docker-tlscerts/ca.pem
+            - --tlscert=/etc/docker-tlscerts/cert.pem
+            - --tlskey=/etc/docker-tlscerts/key.pem
             {{- end }}
             {{- if .Values.registry.enabled }}
             - --insecure-registry={{ .Values.registry.name }}
@@ -130,6 +112,8 @@ spec:
           {{- if or .Values.tlsCerts.create .Values.tlsCerts.name }}
             - name: DOCKER_TLS_VERIFY
               value: "1"
+            - name: DOCKER_CERT_PATH
+              value: /etc/docker-tlscerts
           {{- end }}
           ports:
             - name: docker
@@ -148,8 +132,6 @@ spec:
           {{- end }}
             - name: workdir
               mountPath: /var/lib
-            - name: socket
-              mountPath: /run/containerd
             - name: modules
               mountPath: /lib/modules
               readOnly: true
@@ -199,9 +181,15 @@ spec:
         - name: tlscerts
           secret:
             secretName: {{ include "build-machine.tlsCerts" . }}
+            defaultMode: 256
+            items:
+              - key: ca.crt
+                path: ca.pem
+              - key: tls.crt
+                path: cert.pem
+              - key: tls.key
+                path: key.pem
       {{- end }}
-        - name: socket
-          emptyDir: {}
         - name: modules
           hostPath:
             path: /lib/modules
