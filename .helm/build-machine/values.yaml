@@ -8,6 +8,11 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
+containerd:
+  image:
+    repository: docker.pkg.github.com/sergelogvinov/github-actions-runner/containerd
+    pullPolicy: IfNotPresent
+    tag: "release_v2.274.2-1"
 
 buildkit:
   enabled: false
@@ -22,12 +27,16 @@ buildkit:
     root = "/var/lib/buildkit"
 
     [grpc]
-    address = [ "unix:///run/buildkit/buildkitd.sock", "tcp://0.0.0.0:1234" ]
-    uid = 0
-    gid = 0
+      address = [ "unix:///run/buildkit/buildkitd.sock", "tcp://0.0.0.0:1234" ]
+      uid = 0
+      gid = 0
+
+    [worker.oci]
+      enabled = true
+      platforms = [ "linux/amd64" ]
 
     [worker.containerd]
-    enabled = false
+      enabled = false
 
 docker:
   enabled: true

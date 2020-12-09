@@ -20,6 +20,16 @@ VOLUME ["/var/lib/docker"]
 ENTRYPOINT ["/usr/bin/dockerd","-H","tcp://0.0.0.0:2376"]
 
 #
+FROM alpine:3.12 AS containerd-host
+
+RUN apk --update add containerd device-mapper && \
+    mkdir /etc/containerd && \
+    containerd config default > /etc/containerd/config.toml
+
+VOLUME ["/var/lib/containerd"]
+ENTRYPOINT ["/usr/bin/containerd"]
+
+#
 FROM debian:buster AS github-actions-runner
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \

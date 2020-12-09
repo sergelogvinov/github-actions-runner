@@ -17,8 +17,9 @@ spec:
       {{- include "build-machine.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-    {{- with .Values.podAnnotations }}
       annotations:
+        checksum/configuration: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
     {{- end }}
       labels:
@@ -39,6 +40,25 @@ spec:
         - {{ .Values.registry.name }}
       {{- end }}
       containers:
+        - name: containerd
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.containerd.image.repository }}:{{ .Values.containerd.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.containerd.image.pullPolicy }}
+          args:
+            - --config=/etc/containerd/containerd.toml
+          volumeMounts:
+            - name: config
+              mountPath: /etc/containerd
+            - name: workdir
+              mountPath: /var/lib
+            - name: socket
+              mountPath: /run/containerd
+            - name: modules
+              mountPath: /lib/modules
+              readOnly: true
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
       {{- if .Values.buildkit.enabled }}
         - name: buildkit
           securityContext:
@@ -46,8 +66,7 @@ spec:
           image: "{{ .Values.buildkit.image.repository }}:{{ .Values.buildkit.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.buildkit.image.pullPolicy }}
           args:
-            - --addr=unix:///run/buildkit/buildkitd.sock
-            - --addr=tcp://0.0.0.0:1234
+            - --config=/etc/buildkit/buildkitd.toml
             {{- if or .Values.tlsCerts.create .Values.tlsCerts.name }}
             - --tlscacert=/etc/buildkit-tlscerts/ca.crt
             - --tlscert=/etc/buildkit-tlscerts/tls.crt
@@ -80,10 +99,13 @@ spec:
               mountPath: {{ .mountPath }}
           {{- end }}
             - name: workdir
-              mountPath: /var/lib/buildkit
+              mountPath: /var/lib
+            - name: socket
+              mountPath: /run/containerd
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- end }}
+
       {{- if .Values.docker.enabled }}
         - name: docker
           securityContext:
@@ -92,6 +114,7 @@ spec:
           imagePullPolicy: {{ .Values.docker.image.pullPolicy }}
           args:
             - --config-file=/etc/docker-config/daemon.json
+            - --containerd=/run/containerd/containerd.sock
             {{- if or .Values.tlsCerts.create .Values.tlsCerts.name }}
             - --tlsverify
             - --tlscacert=/etc/docker-tlscerts/ca.crt
@@ -124,7 +147,9 @@ spec:
               mountPath: {{ .mountPath }}
           {{- end }}
             - name: workdir
-              mountPath: /var/lib/docker
+              mountPath: /var/lib
+            - name: socket
+              mountPath: /run/containerd
             - name: modules
               mountPath: /lib/modules
               readOnly: true
@@ -175,6 +200,11 @@ spec:
           secret:
             secretName: {{ include "build-machine.tlsCerts" . }}
       {{- end }}
+        - name: socket
+          emptyDir: {}
+        - name: modules
+          hostPath:
+            path: /lib/modules
       {{- if .Values.buildkit.enabled }}
         {{- range .Values.buildkit.extraMounts }}
         - name: {{ .name }}
@@ -198,9 +228,6 @@ spec:
             name: {{ .configMap }}
           {{- end }}
         {{- end }}
-        - name: modules
-          hostPath:
-            path: /lib/modules
       {{- end }}
       {{- if .Values.registry.enabled }}
         {{- range .Values.registry.extraMounts }}
