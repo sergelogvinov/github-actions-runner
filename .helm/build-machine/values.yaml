@@ -8,12 +8,6 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
-containerd:
-  image:
-    repository: docker.pkg.github.com/sergelogvinov/github-actions-runner/containerd
-    pullPolicy: IfNotPresent
-    tag: "release_v2.274.2-1"
-
 buildkit:
   enabled: false
   image:
