@@ -6,7 +6,7 @@ RUN git clone --single-branch --branch 0.24.3 --depth 1 https://github.com/immor
 RUN make build-linux
 
 #
-FROM alpine:3.12 AS docker-host
+FROM alpine:3.13 AS docker-host
 
 RUN apk --update add docker device-mapper && \
     mkdir /root/.docker && \
@@ -43,21 +43,19 @@ RUN apt-get update && apt-get install -y docker.io yamllint && \
     mv /tmp/reviewdog /usr/bin/reviewdog && \
     rm -rf /tmp/*
 
-RUN wget https://dl.k8s.io/v1.19.4/kubernetes-client-linux-amd64.tar.gz -O /tmp/kubernetes-client-linux-amd64.tar.gz && \
+RUN wget https://dl.k8s.io/v1.20.2/kubernetes-client-linux-amd64.tar.gz -O /tmp/kubernetes-client-linux-amd64.tar.gz && \
     cd /tmp && tar -xzf /tmp/kubernetes-client-linux-amd64.tar.gz && mv kubernetes/client/bin/kubectl /usr/bin/kubectl && \
-    wget https://get.helm.sh/helm-v3.4.1-linux-amd64.tar.gz -O /tmp/helm.tar.gz && \
+    wget https://get.helm.sh/helm-v3.5.2-linux-amd64.tar.gz -O /tmp/helm.tar.gz && \
     cd /tmp && tar -xzf /tmp/helm.tar.gz && mv linux-amd64/helm /usr/bin/helm && rm -rf /tmp/*
 
 USER github
 WORKDIR /app
 
-ENV GITHUB_VERSION=2.274.2
+ENV GITHUB_VERSION=2.276.1
 RUN curl -L -O https://github.com/actions/runner/releases/download/v${GITHUB_VERSION}/actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz && \
     tar xzf ./actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz && \
     rm actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz && \
     sudo /app/bin/installdependencies.sh
-
-RUN helm repo add stable https://charts.helm.sh/stable
 
 ENV RUNNER_WORK_FOLDER=/home/github/builds
 
