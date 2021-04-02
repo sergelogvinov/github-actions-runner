@@ -3,6 +3,24 @@ entries:
   build-machine:
   - apiVersion: v2
     appVersion: 20.10.3
+    created: "2021-04-02T19:35:32.650990332Z"
+    description: Container build machine for Kubernetes
+    digest: 99537fbdb7b19f2ba8ac91d8fec88d1e554c04a2f1f81b79ca27e4e3be4f2a19
+    home: https://github.com/sergelogvinov/github-actions-runner
+    keywords:
+    - docker
+    - buildkit
+    - devops
+    - automation
+    name: build-machine
+    sources:
+    - https://github.com/sergelogvinov/github-actions-runner
+    type: application
+    urls:
+    - https://github.com/sergelogvinov/github-actions-runner/releases/download/build-machine-0.2.3/build-machine-0.2.3.tgz
+    version: 0.2.3
+  - apiVersion: v2
+    appVersion: 20.10.3
     created: "2021-02-05T19:29:33.474026501Z"
     description: Container build machine for Kubernetes
     digest: fa6e4eb2b0077d12d939bfb11d0dddec87e2b374c86623c89d9a57f1bb10a67e
@@ -56,6 +74,26 @@ entries:
     - https://github.com/sergelogvinov/github-actions-runner/releases/download/build-machine-0.1.0/build-machine-0.1.0.tgz
     version: 0.1.0
   github-actions:
+  - apiVersion: v2
+    appVersion: 2.277.1
+    created: "2021-04-02T19:35:32.921444571Z"
+    description: Github Action Runner on Kubernetes
+    digest: baf2319c9e3b5c934bca53bbaa626a357a6c4ff11d652e2f967c5287d6322c5d
+    home: https://github.com/features/actions
+    keywords:
+    - ci
+    - continuous integration
+    - continuous delivery
+    - continuous deployment
+    - devops
+    - automation
+    name: github-actions
+    sources:
+    - https://github.com/sergelogvinov/github-actions-runner
+    type: application
+    urls:
+    - https://github.com/sergelogvinov/github-actions-runner/releases/download/github-actions-0.2.3/github-actions-0.2.3.tgz
+    version: 0.2.3
   - apiVersion: v2
     appVersion: 2.276.1
     created: "2021-02-05T19:29:33.584770108Z"
