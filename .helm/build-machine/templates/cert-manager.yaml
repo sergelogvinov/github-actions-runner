@@ -1,12 +1,12 @@
 {{- if .Values.tlsCerts.create }}
-apiVersion: cert-manager.io/v1alpha2
+apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
   name: {{ include "build-machine.fullname" . }}-issuer
 spec:
   selfSigned: {}
 ---
-apiVersion: cert-manager.io/v1alpha2
+apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: {{ include "build-machine.fullname" . }}
@@ -16,6 +16,8 @@ spec:
     name: {{ include "build-machine.fullname" . }}-issuer
     kind: Issuer
   commonName: {{ include "build-machine.fullname" . }}
+  duration: 8760h # 12m
+  renewBefore: 4380h # 6m
   usages:
     - server auth
     - client auth

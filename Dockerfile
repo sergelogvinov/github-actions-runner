@@ -43,9 +43,9 @@ RUN apt-get update && apt-get install -y docker.io yamllint && \
     mv /tmp/reviewdog /usr/bin/reviewdog && \
     rm -rf /tmp/*
 
-RUN wget https://dl.k8s.io/v1.20.2/kubernetes-client-linux-amd64.tar.gz -O /tmp/kubernetes-client-linux-amd64.tar.gz && \
+RUN wget https://dl.k8s.io/v1.20.5/kubernetes-client-linux-amd64.tar.gz -O /tmp/kubernetes-client-linux-amd64.tar.gz && \
     cd /tmp && tar -xzf /tmp/kubernetes-client-linux-amd64.tar.gz && mv kubernetes/client/bin/kubectl /usr/bin/kubectl && \
-    wget https://get.helm.sh/helm-v3.5.2-linux-amd64.tar.gz -O /tmp/helm.tar.gz && \
+    wget https://get.helm.sh/helm-v3.5.3-linux-amd64.tar.gz -O /tmp/helm.tar.gz && \
     cd /tmp && tar -xzf /tmp/helm.tar.gz && mv linux-amd64/helm /usr/bin/helm && rm -rf /tmp/*
 
 USER github
