@@ -8,7 +8,6 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
-
 buildkit:
   enabled: false
   image:
@@ -22,12 +21,16 @@ buildkit:
     root = "/var/lib/buildkit"
 
     [grpc]
-    address = [ "unix:///run/buildkit/buildkitd.sock", "tcp://0.0.0.0:1234" ]
-    uid = 0
-    gid = 0
+      address = [ "unix:///run/buildkit/buildkitd.sock", "tcp://0.0.0.0:1234" ]
+      uid = 0
+      gid = 0
+
+    [worker.oci]
+      enabled = true
+      platforms = [ "linux/amd64" ]
 
     [worker.containerd]
-    enabled = false
+      enabled = false
 
 docker:
   enabled: true
@@ -36,13 +39,18 @@ docker:
     pullPolicy: IfNotPresent
     tag: "release_v2.278.0-2"
 
+  command: "/usr/bin/dockerd"
+
   extraMounts: []
 
   configData: |
     {
-      "experimental": true,
+      "iptables": true,
+      "features": {"buildkit": true},
       "mtu": 1300,
-      "log-level": "warn"
+      "log-level": "warn",
+      "experimental" : true,
+      "metrics-addr" : "0.0.0.0:9323"
     }
 
 registry:

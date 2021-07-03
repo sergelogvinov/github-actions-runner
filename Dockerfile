@@ -8,7 +8,10 @@ RUN make build-linux
 #
 FROM alpine:3.13 AS docker-host
 
-RUN apk --update add docker device-mapper && \
+ENV DOCKER_VERSION 20.10.0
+RUN apk --update add ca-certificates iptables ip6tables && \
+    wget -O docker.tgz https://download.docker.com/linux/static/test/x86_64/docker-${DOCKER_VERSION}.tgz && \
+    tar --extract --file docker.tgz --strip-components 1 --directory /usr/bin/ && rm docker.tgz && \
     mkdir /root/.docker && \
     ln -s /etc/docker-tlscerts/ca.crt   /root/.docker/ca.pem    && \
     ln -s /etc/docker-tlscerts/tls.crt  /root/.docker/cert.pem  && \
@@ -18,6 +21,16 @@ ENV DOCKER_HOST=tcp://127.0.0.1:2376
 
 VOLUME ["/var/lib/docker"]
 ENTRYPOINT ["/usr/bin/dockerd","-H","tcp://0.0.0.0:2376"]
+
+#
+FROM alpine:3.12 AS containerd-host
+
+RUN apk --update add containerd device-mapper && \
+    mkdir /etc/containerd && \
+    containerd config default > /etc/containerd/config.toml
+
+VOLUME ["/var/lib/containerd"]
+ENTRYPOINT ["/usr/bin/containerd"]
 
 #
 FROM debian:buster AS github-actions-runner

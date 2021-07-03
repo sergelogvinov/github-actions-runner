@@ -17,8 +17,9 @@ spec:
       {{- include "build-machine.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-    {{- with .Values.podAnnotations }}
       annotations:
+        checksum/configuration: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
     {{- end }}
       labels:
@@ -46,7 +47,7 @@ spec:
           image: "{{ .Values.buildkit.image.repository }}:{{ .Values.buildkit.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.buildkit.image.pullPolicy }}
           args:
-            - --addr=unix:///run/buildkit/buildkitd.sock
+            - --config=/etc/buildkit/buildkitd.toml
             - --addr=tcp://0.0.0.0:1234
             {{- if or .Values.tlsCerts.create .Values.tlsCerts.name }}
             - --tlscacert=/etc/buildkit-tlscerts/ca.crt
@@ -80,23 +81,27 @@ spec:
               mountPath: {{ .mountPath }}
           {{- end }}
             - name: workdir
-              mountPath: /var/lib/buildkit
+              mountPath: /var/lib
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- end }}
+
       {{- if .Values.docker.enabled }}
         - name: docker
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.docker.image.repository }}:{{ .Values.docker.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.docker.image.pullPolicy }}
+          command: [{{ .Values.docker.command }}]
           args:
             - --config-file=/etc/docker-config/daemon.json
+            - -H unix:///var/run/docker.sock
+            - -H tcp://0.0.0.0:2376
             {{- if or .Values.tlsCerts.create .Values.tlsCerts.name }}
             - --tlsverify
-            - --tlscacert=/etc/docker-tlscerts/ca.crt
-            - --tlscert=/etc/docker-tlscerts/tls.crt
-            - --tlskey=/etc/docker-tlscerts/tls.key
+            - --tlscacert=/etc/docker-tlscerts/ca.pem
+            - --tlscert=/etc/docker-tlscerts/cert.pem
+            - --tlskey=/etc/docker-tlscerts/key.pem
             {{- end }}
             {{- if .Values.registry.enabled }}
             - --insecure-registry={{ .Values.registry.name }}
@@ -107,6 +112,8 @@ spec:
           {{- if or .Values.tlsCerts.create .Values.tlsCerts.name }}
             - name: DOCKER_TLS_VERIFY
               value: "1"
+            - name: DOCKER_CERT_PATH
+              value: /etc/docker-tlscerts
           {{- end }}
           ports:
             - name: docker
@@ -124,7 +131,7 @@ spec:
               mountPath: {{ .mountPath }}
           {{- end }}
             - name: workdir
-              mountPath: /var/lib/docker
+              mountPath: /var/lib
             - name: modules
               mountPath: /lib/modules
               readOnly: true
@@ -174,7 +181,18 @@ spec:
         - name: tlscerts
           secret:
             secretName: {{ include "build-machine.tlsCerts" . }}
+            defaultMode: 256
+            items:
+              - key: ca.crt
+                path: ca.pem
+              - key: tls.crt
+                path: cert.pem
+              - key: tls.key
+                path: key.pem
       {{- end }}
+        - name: modules
+          hostPath:
+            path: /lib/modules
       {{- if .Values.buildkit.enabled }}
         {{- range .Values.buildkit.extraMounts }}
         - name: {{ .name }}
@@ -198,9 +216,6 @@ spec:
             name: {{ .configMap }}
           {{- end }}
         {{- end }}
-        - name: modules
-          hostPath:
-            path: /lib/modules
       {{- end }}
       {{- if .Values.registry.enabled }}
         {{- range .Values.registry.extraMounts }}

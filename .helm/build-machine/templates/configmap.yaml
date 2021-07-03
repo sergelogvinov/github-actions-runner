@@ -5,9 +5,14 @@ metadata:
   labels:
     {{- include "build-machine.labels" . | nindent 4 }}
 data:
+  containerd.toml: |-
+    disabled_plugins = ["cri","btrfs","zfs","aufs","devmapper"]
+
   buildkitd.toml: |-
     {{ .Values.buildkit.configData | nindent 4 }}
+
   daemon.json: |-
     {{ .Values.docker.configData | nindent 4 }}
+
   config.yml: |-
     {{ .Values.registry.configData | nindent 4 }}
