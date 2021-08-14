@@ -2,6 +2,24 @@ apiVersion: v1
 entries:
   build-machine:
   - apiVersion: v2
+    appVersion: 20.10.7
+    created: "2021-08-14T15:48:35.802006209Z"
+    description: Container build machine for Kubernetes
+    digest: 5f9215cd196d6e8cd6f241cd5f989af5189de4de2a150b5798d17cb89c71e40f
+    home: https://github.com/sergelogvinov/github-actions-runner
+    keywords:
+    - docker
+    - buildkit
+    - devops
+    - automation
+    name: build-machine
+    sources:
+    - https://github.com/sergelogvinov/github-actions-runner
+    type: application
+    urls:
+    - https://github.com/sergelogvinov/github-actions-runner/releases/download/build-machine-0.2.7/build-machine-0.2.7.tgz
+    version: 0.2.7
+  - apiVersion: v2
     appVersion: 20.10.3
     created: "2021-05-21T20:28:49.271620594Z"
     description: Container build machine for Kubernetes
@@ -92,6 +110,26 @@ entries:
     - https://github.com/sergelogvinov/github-actions-runner/releases/download/build-machine-0.1.0/build-machine-0.1.0.tgz
     version: 0.1.0
   github-actions:
+  - apiVersion: v2
+    appVersion: 2.280.2
+    created: "2021-08-14T15:48:35.945309627Z"
+    description: Github Action Runner on Kubernetes
+    digest: c153207c3256cbd4e4b5d312fa2a7506ca83e452ed7b170b0a853b0ddf2bae47
+    home: https://github.com/features/actions
+    keywords:
+    - ci
+    - continuous integration
+    - continuous delivery
+    - continuous deployment
+    - devops
+    - automation
+    name: github-actions
+    sources:
+    - https://github.com/sergelogvinov/github-actions-runner
+    type: application
+    urls:
+    - https://github.com/sergelogvinov/github-actions-runner/releases/download/github-actions-0.2.7/github-actions-0.2.7.tgz
+    version: 0.2.7
   - apiVersion: v2
     appVersion: 2.278.0
     created: "2021-05-21T20:28:49.396651989Z"
