@@ -14,7 +14,7 @@ buildkit:
   image:
     repository: ghcr.io/sergelogvinov/github-actions-runner/containerd
     pullPolicy: IfNotPresent
-    tag: "release_v2.278.0-2"
+    tag: release_v2.280.2
 
   extraMounts: []
 
@@ -37,7 +37,7 @@ docker:
   image:
     repository: ghcr.io/sergelogvinov/github-actions-runner/docker
     pullPolicy: IfNotPresent
-    tag: "release_v2.278.0-2"
+    tag: release_v2.280.2
 
   extraMounts: []
 
