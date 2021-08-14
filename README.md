@@ -6,7 +6,7 @@ Example to use .github/workflows/pr.yaml
 
 __runs-on__ set to __self-hosted__
 
-```
+```yaml
 jobs:
   build-image:
     runs-on: self-hosted
@@ -17,21 +17,20 @@ jobs:
 
 ## Get help
 
-```
+```bash
 make help
 ```
 
 ## Build and push
 
-```
+```bash
 make build
 make push
 ```
 
-
 ## Run runner localy
 
-```
+```bash
 make build
 
 export RUNNER_REPOSITORY_URL=https://github.com/sergelogvinov/github-actions-runner
@@ -42,7 +41,7 @@ make run
 
 ## Run runner on k8s
 
-```
+```bash
 cat <<EOF > .helm/build-machine/values-dev.yaml
 
 replicaCount: 2
