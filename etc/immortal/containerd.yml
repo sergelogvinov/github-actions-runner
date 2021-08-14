@@ -1,0 +1,6 @@
+cmd: /usr/bin/containerd
+log:
+    file: /dev/stdout
+wait: 1
+require:
+  - buildkit

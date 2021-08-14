@@ -5,7 +5,7 @@ BUILD_VCS_BRANCH?=$(shell git branch 2>/dev/null | sed -n '/^\*/s/^\* //p' | sed
 BUILD_VCS_NUMBER?=$(shell git rev-parse --short=7 HEAD)
 CODE_TAG?=$(shell git describe --exact-match --tags 2>/dev/null || git branch 2>/dev/null | sed -n '/^\*/s/^\* //p' | sed 's/\//-/g' | sed 's/^(HEAD detached at \(.*\))$$/\1-$(BUILD_VCS_NUMBER)/g')
 
-REGISTRY?=docker.pkg.github.com/sergelogvinov/github-actions-runner
+REGISTRY?=ghcr.io/sergelogvinov/github-actions-runner
 RUNNER_REPOSITORY_URL?=https://github.com/sergelogvinov/github-actions-runner
 RUNNER_TOKEN?=
 DOCKER_HOST?=
@@ -22,7 +22,8 @@ build: ## Build project
 		-f Dockerfile --target=github-actions-runner .
 	docker build $(BUILDARG) --rm -t local/docker:$(CODE_TAG) \
 		-f Dockerfile --target=docker-host .
-
+	docker build $(BUILDARG) --rm -t local/containerd:$(CODE_TAG) \
+		-f Dockerfile --target=containerd-host .
 
 run: ## Run locally
 	docker rm -f github-actions-runner 2>/dev/null ||:
@@ -40,6 +41,8 @@ push: ## Push image to registry
 	docker tag local/docker:$(CODE_TAG) $(REGISTRY)/docker:$(CODE_TAG)
 	docker push $(REGISTRY)/docker:$(CODE_TAG)
 
+	docker tag local/containerd:$(CODE_TAG) $(REGISTRY)/containerd:$(CODE_TAG)
+	docker push $(REGISTRY)/containerd:$(CODE_TAG)
 
 deploy: ## Deploy to k8s
 	touch .helm/build-machine/values-dev.yaml
