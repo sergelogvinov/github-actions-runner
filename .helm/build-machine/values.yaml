@@ -10,7 +10,7 @@ fullnameOverride: ""
 
 
 buildkit:
-  enabled: true
+  enabled: false
   image:
     repository: ghcr.io/sergelogvinov/github-actions-runner/containerd
     pullPolicy: IfNotPresent
