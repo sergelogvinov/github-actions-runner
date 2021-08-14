@@ -1,0 +1,3 @@
+cmd: /usr/bin/buildkitd
+log:
+    file: /dev/stdout

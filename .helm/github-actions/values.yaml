@@ -5,9 +5,9 @@
 replicaCount: 1
 
 image:
-  repository: docker.pkg.github.com/sergelogvinov/github-actions-runner/github-actions-runner
+  repository: ghcr.io/sergelogvinov/github-actions-runner/github-actions-runner
   pullPolicy: IfNotPresent
-  tag: "release_v2.278.0-2"
+  tag: release_v2.280.2
 
 envs:
   DOCKER_HOST: tcp://build-machine:2376

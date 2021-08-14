@@ -12,9 +12,9 @@ fullnameOverride: ""
 buildkit:
   enabled: false
   image:
-    repository: moby/buildkit
+    repository: ghcr.io/sergelogvinov/github-actions-runner/containerd
     pullPolicy: IfNotPresent
-    tag: master
+    tag: release_v2.280.2
 
   extraMounts: []
 
@@ -27,14 +27,17 @@ buildkit:
     gid = 0
 
     [worker.containerd]
-    enabled = false
+      address = "/run/containerd/containerd.sock"
+      enabled = true
+      platforms = [ "linux/amd64" ]
+      namespace = "buildkit"
 
 docker:
-  enabled: true
+  enabled: false
   image:
-    repository: docker.pkg.github.com/sergelogvinov/github-actions-runner/docker
+    repository: ghcr.io/sergelogvinov/github-actions-runner/docker
     pullPolicy: IfNotPresent
-    tag: "release_v2.278.0-2"
+    tag: release_v2.280.2
 
   extraMounts: []
 
