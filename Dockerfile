@@ -84,8 +84,8 @@ RUN wget https://github.com/aquasecurity/trivy/releases/download/v0.19.2/trivy_0
     echo "4e8bfe28713e471e4e4078e2cfd933b9  /tmp/trivy_Linux-64bit.deb" | md5sum -c - && \
     dpkg -i /tmp/trivy_Linux-64bit.deb && rm -f /tmp/trivy_Linux-64bit.deb
 
-RUN wget https://dl.k8s.io/v1.22.0/kubernetes-client-linux-amd64.tar.gz -O /tmp/kubernetes-client-linux-amd64.tar.gz && \
-    echo "e601ab125bde75fb0ae083c997e333a7  /tmp/kubernetes-client-linux-amd64.tar.gz" | md5sum -c - && \
+RUN wget https://dl.k8s.io/v1.22.2/kubernetes-client-linux-amd64.tar.gz -O /tmp/kubernetes-client-linux-amd64.tar.gz && \
+    echo "09694e377b5104c47d291626cdb9c199519119b0ae27c1d9ed61b6dd544f462032026188a298f533494ad04ec6e0366ed3e3eac89122f658c2efee433b25090f  /tmp/kubernetes-client-linux-amd64.tar.gz" | shasum -a 512 -c && \
     cd /tmp && tar -xzf /tmp/kubernetes-client-linux-amd64.tar.gz && mv kubernetes/client/bin/kubectl /usr/bin/kubectl && \
     wget https://get.helm.sh/helm-v3.6.3-linux-amd64.tar.gz -O /tmp/helm.tar.gz && \
     echo "24b16800f8c7f44b5dd128e3355ecf1b  /tmp/helm.tar.gz" | md5sum -c - && \
@@ -94,10 +94,10 @@ RUN wget https://dl.k8s.io/v1.22.0/kubernetes-client-linux-amd64.tar.gz -O /tmp/
 USER github
 WORKDIR /app
 
-ENV GITHUB_VERSION=2.281.1
+ENV GITHUB_VERSION=2.282.1
 RUN wget https://github.com/actions/runner/releases/download/v${GITHUB_VERSION}/actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz \
         -O actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz && \
-    echo "04f6c17235d4b29fc1392d5fae63919a96e7d903d67790f81cffdd69c58cb563  actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz" | shasum -a 256 -c && \
+    echo "1bd2e9762890f7b6bfd73043c106c09519eb865c66797d9558b83178854a2435  actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz" | shasum -a 256 -c && \
     tar xzf ./actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz && \
     rm -f actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz
 
