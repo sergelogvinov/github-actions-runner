@@ -36,4 +36,4 @@ else
         --unattended
 fi
 
-exec /usr/sbin/immortal -w 15 -n -l /dev/stdout -d /app /app/bin/Runner.Listener run
+exec /usr/sbin/immortal -w 15 -n -l /dev/stdout -d /app /app/bin/Runner.Listener run --startuptype service
