@@ -67,9 +67,8 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /etc/docker-config
-          {{- range .Values.docker.extraMounts }}
-            - name: {{ .name }}
-              mountPath: {{ .mountPath }}
+          {{- if .Values.docker.extraVolumeMounts }}
+            {{ toYaml .Values.docker.extraVolumeMounts | nindent 12 }}
           {{- end }}
             - name: workdir
               mountPath: /var/lib/docker
@@ -107,16 +106,9 @@ spec:
         - name: config
           configMap:
             name: {{ include "github-actions.fullname" . }}
-        {{- range .Values.docker.extraMounts }}
-        - name: {{ .name }}
-          {{- if .hostPath }}
-          hostPath:
-            path: {{ .hostPath }}
-          {{- else }}
-          configMap:
-            name: {{ .configMap }}
-          {{- end }}
-        {{- end }}
+      {{- if .Values.docker.extraVolumes }}
+        {{ toYaml .Values.docker.extraVolumes | nindent 8 }}
+      {{- end }}
         - name: modules
           hostPath:
             path: /lib/modules

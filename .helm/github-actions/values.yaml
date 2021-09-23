@@ -85,10 +85,22 @@ docker:
       cpu: 1
       memory: 512Mi
 
-  extraMounts:
-    - name: certs
-      mountPath: /etc/docker/certs.d
-      hostPath: /etc/docker/certs.d
+  extraVolumeMounts: []
+  ## Additional volumeMounts to the main container.
+  #   - name: certs
+  #     mountPath: /etc/docker/certs.d/domain.com
+
+  extraVolumes: []
+  ## Additional volumes to the pod.
+  #   - name: certs
+  #     secret:
+  #       secretName: domain.com-auth-tls
+  #       defaultMode: 256
+  #       items:
+  #         - key: tls.crt
+  #           path: client.cert
+  #         - key: tls.key
+  #           path: client.key
 
   persistence:
     enabled: false
