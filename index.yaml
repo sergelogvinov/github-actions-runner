@@ -111,6 +111,26 @@ entries:
     version: 0.1.0
   github-actions:
   - apiVersion: v2
+    appVersion: release_v2.282.1
+    created: "2021-09-23T06:39:08.493427219Z"
+    description: Github Action Runner on Kubernetes
+    digest: de371e87b071c665d2557a8e053315804c8e35684ff659965d87e6c78213fa06
+    home: https://github.com/features/actions
+    keywords:
+    - ci
+    - continuous integration
+    - continuous delivery
+    - continuous deployment
+    - devops
+    - automation
+    name: github-actions
+    sources:
+    - https://github.com/sergelogvinov/github-actions-runner
+    type: application
+    urls:
+    - https://github.com/sergelogvinov/github-actions-runner/releases/download/github-actions-0.4.0/github-actions-0.4.0.tgz
+    version: 0.4.0
+  - apiVersion: v2
     appVersion: release_v2.281.1
     created: "2021-09-17T14:47:50.311094756Z"
     description: Github Action Runner on Kubernetes
