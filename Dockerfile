@@ -70,34 +70,34 @@ RUN adduser --disabled-password --home /home/github --uid 1000 --gecos "GitHubAg
     install -m 0775 -o github -g github -d /app && \
     install -m 0775 -o github -g github -d /home/github/.ansible -d /home/github/builds
 
-ENV REVIEWDOG_VERSION=0.11.0
+ENV REVIEWDOG_VERSION=0.13.1
 RUN apt-get update && apt-get install -y docker.io && \
     wget https://github.com/reviewdog/reviewdog/releases/download/v${REVIEWDOG_VERSION}/reviewdog_${REVIEWDOG_VERSION}_Linux_x86_64.tar.gz \
         -O /tmp/reviewdog.tar.gz  && \
-    echo "69fb0c04166fd1d311d8f37c45516617  /tmp/reviewdog.tar.gz" | md5sum -c - && \
+    echo "08a5a323939101195af1d420ab6be3a50ec12f58e3419e3fcd07b6871f0b9a7e  /tmp/reviewdog.tar.gz" | shasum -a 256 -c && \
     cd /tmp && tar --no-same-owner -xzf /tmp/reviewdog.tar.gz && \
     mv /tmp/reviewdog /usr/bin/reviewdog && \
     rm -rf /tmp/*
 
-RUN wget https://github.com/aquasecurity/trivy/releases/download/v0.19.2/trivy_0.19.2_Linux-64bit.deb \
+RUN wget https://github.com/aquasecurity/trivy/releases/download/v0.22.0/trivy_0.22.0_Linux-64bit.deb \
         -O /tmp/trivy_Linux-64bit.deb  && \
-    echo "4e8bfe28713e471e4e4078e2cfd933b9  /tmp/trivy_Linux-64bit.deb" | md5sum -c - && \
+    echo "c2ebad7f22317cf42bb3e3c2786caa00652db8f0526ed260daafe81e309599a2  /tmp/trivy_Linux-64bit.deb" | shasum -a 256 -c && \
     dpkg -i /tmp/trivy_Linux-64bit.deb && rm -f /tmp/trivy_Linux-64bit.deb
 
-RUN wget https://dl.k8s.io/v1.22.2/kubernetes-client-linux-amd64.tar.gz -O /tmp/kubernetes-client-linux-amd64.tar.gz && \
+RUN wget https://dl.k8s.io/v1.23.1/kubernetes-client-linux-amd64.tar.gz -O /tmp/kubernetes-client-linux-amd64.tar.gz && \
     echo "09694e377b5104c47d291626cdb9c199519119b0ae27c1d9ed61b6dd544f462032026188a298f533494ad04ec6e0366ed3e3eac89122f658c2efee433b25090f  /tmp/kubernetes-client-linux-amd64.tar.gz" | shasum -a 512 -c && \
     cd /tmp && tar -xzf /tmp/kubernetes-client-linux-amd64.tar.gz && mv kubernetes/client/bin/kubectl /usr/bin/kubectl && \
-    wget https://get.helm.sh/helm-v3.6.3-linux-amd64.tar.gz -O /tmp/helm.tar.gz && \
-    echo "24b16800f8c7f44b5dd128e3355ecf1b  /tmp/helm.tar.gz" | md5sum -c - && \
+    wget https://get.helm.sh/helm-v3.7.2-linux-amd64.tar.gz -O /tmp/helm.tar.gz && \
+    echo "f439e0be3fa6dd1863883d9c390ae232  /tmp/helm.tar.gz" | md5sum -c - && \
     cd /tmp && tar -xzf /tmp/helm.tar.gz && mv linux-amd64/helm /usr/bin/helm && rm -rf /tmp/*
 
 USER github
 WORKDIR /app
 
-ENV GITHUB_VERSION=2.282.1
+ENV GITHUB_VERSION=2.285.1
 RUN wget https://github.com/actions/runner/releases/download/v${GITHUB_VERSION}/actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz \
         -O actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz && \
-    echo "1bd2e9762890f7b6bfd73043c106c09519eb865c66797d9558b83178854a2435  actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz" | shasum -a 256 -c && \
+    echo "5fd98e1009ed13783d17cc73f13ea9a55f21b45ced915ed610d00668b165d3b2  actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz" | shasum -a 256 -c && \
     tar xzf ./actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz && \
     rm -f actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz
 
