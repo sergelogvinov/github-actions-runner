@@ -209,6 +209,8 @@ spec:
           {{- if .hostPath }}
           hostPath:
             path: {{ .hostPath }}
+          {{- else if .secret }}
+          {{- toYaml .secret | nindent 10 }}
           {{- else }}
           configMap:
             name: {{ .configMap }}

@@ -6,7 +6,7 @@ RUN git clone --single-branch --branch 0.24.3 --depth 1 https://github.com/immor
 RUN make build-linux
 
 #
-FROM alpine:3.14 AS docker-host
+FROM alpine:3.15 AS docker-host
 LABEL org.opencontainers.image.source https://github.com/sergelogvinov/github-actions-runner
 
 RUN apk --update add docker device-mapper && \
@@ -85,7 +85,7 @@ RUN wget https://github.com/aquasecurity/trivy/releases/download/v0.22.0/trivy_0
     dpkg -i /tmp/trivy_Linux-64bit.deb && rm -f /tmp/trivy_Linux-64bit.deb
 
 RUN wget https://dl.k8s.io/v1.23.1/kubernetes-client-linux-amd64.tar.gz -O /tmp/kubernetes-client-linux-amd64.tar.gz && \
-    echo "09694e377b5104c47d291626cdb9c199519119b0ae27c1d9ed61b6dd544f462032026188a298f533494ad04ec6e0366ed3e3eac89122f658c2efee433b25090f  /tmp/kubernetes-client-linux-amd64.tar.gz" | shasum -a 512 -c && \
+    echo "aaf6c4f2f65b27902ce02069aa5a7c5b195099deb522fbe7638c5458fc1ba6c2fbe2eb00fa18edc952989dfc27c7a252b37792987c55dc044b88d4e350569891  /tmp/kubernetes-client-linux-amd64.tar.gz" | shasum -a 512 -c && \
     cd /tmp && tar -xzf /tmp/kubernetes-client-linux-amd64.tar.gz && mv kubernetes/client/bin/kubectl /usr/bin/kubectl && \
     wget https://get.helm.sh/helm-v3.7.2-linux-amd64.tar.gz -O /tmp/helm.tar.gz && \
     echo "f439e0be3fa6dd1863883d9c390ae232  /tmp/helm.tar.gz" | md5sum -c - && \

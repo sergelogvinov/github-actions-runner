@@ -40,6 +40,19 @@ docker:
     tag: release_v2.280.2
 
   extraMounts: []
+    # - name: certs
+    #   mountPath: /etc/docker/certs.d/host
+
+    #   hostPath: ~
+    #   configMap: ~
+    #   secret:
+    #     secretName: host-auth-ssl
+    #     defaultMode: 256
+    #     items:
+    #       - key: tls.crt
+    #         path: client.cert
+    #       - key: tls.key
+    #         path: client.key
 
   configData: |
     {
