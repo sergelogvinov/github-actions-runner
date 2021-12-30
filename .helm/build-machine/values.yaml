@@ -42,7 +42,6 @@ docker:
   extraMounts: []
     # - name: certs
     #   mountPath: /etc/docker/certs.d/host
-
     #   hostPath: ~
     #   configMap: ~
     #   secret:
