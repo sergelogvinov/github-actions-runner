@@ -88,7 +88,7 @@ spec:
               mountPath: /etc/buildkit-tlscerts
           {{- end }}
           {{- range .Values.buildkit.extraMounts }}
-            - name: {{ .name }}
+            - name: buildkit-{{ .name }}
               mountPath: {{ .mountPath }}
           {{- end }}
             - name: run
@@ -134,7 +134,7 @@ spec:
               mountPath: /etc/docker-tlscerts
           {{- end }}
           {{- range .Values.docker.extraMounts }}
-            - name: {{ .name }}
+            - name: docker-{{ .name }}
               mountPath: {{ .mountPath }}
           {{- end }}
             - name: workdir
@@ -162,7 +162,7 @@ spec:
             - name: config
               mountPath: /etc/docker/registry
           {{- range .Values.registry.extraMounts }}
-            - name: {{ .name }}
+            - name: registry-{{ .name }}
               mountPath: {{ .mountPath }}
           {{- end }}
           resources:
@@ -193,10 +193,13 @@ spec:
         - name: run
           emptyDir: {}
         {{- range .Values.buildkit.extraMounts }}
-        - name: {{ .name }}
+        - name: buildkit-{{ .name }}
           {{- if .hostPath }}
           hostPath:
             path: {{ .hostPath }}
+          {{- else if .secret }}
+          secret:
+            {{- toYaml .secret | nindent 12 }}
           {{- else }}
           configMap:
             name: {{ .configMap }}
@@ -205,10 +208,13 @@ spec:
       {{- end }}
       {{- if .Values.docker.enabled }}
         {{- range .Values.docker.extraMounts }}
-        - name: {{ .name }}
+        - name: docker-{{ .name }}
           {{- if .hostPath }}
           hostPath:
             path: {{ .hostPath }}
+          {{- else if .secret }}
+          secret:
+            {{- toYaml .secret | nindent 12 }}
           {{- else }}
           configMap:
             name: {{ .configMap }}
@@ -220,10 +226,13 @@ spec:
       {{- end }}
       {{- if .Values.registry.enabled }}
         {{- range .Values.registry.extraMounts }}
-        - name: {{ .name }}
+        - name: registry-{{ .name }}
           {{- if .hostPath }}
           hostPath:
             path: {{ .hostPath }}
+          {{- else if .secret }}
+          secret:
+            {{- toYaml .secret | nindent 12 }}
           {{- else }}
           configMap:
             name: {{ .configMap }}
