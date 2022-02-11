@@ -42,8 +42,8 @@ RUN fname="cni-plugins-${TARGETOS:-linux}-${TARGETARCH:-amd64}-v${CNI_PLUGINS_VE
   mkdir -p /opt/cni/bin && tar xzf "${fname}" -C /opt/cni/bin && \
   rm -f "${fname}"
 
-RUN curl -o /tmp/nerdctl.tar.gz -fSL https://github.com/containerd/nerdctl/releases/download/v0.11.0/nerdctl-0.11.0-linux-amd64.tar.gz && \
-    echo "8c8a740295267bf50a322820ccf33fc1669337b03a544ae1e75bccb30f7705e1 /tmp/nerdctl.tar.gz" | sha256sum -c - && \
+RUN curl -o /tmp/nerdctl.tar.gz -fSL https://github.com/containerd/nerdctl/releases/download/v0.16.1/nerdctl-0.16.1-linux-amd64.tar.gz && \
+    echo "543d58c057a5a59c67ca523016c1dac57f9a09d1d9e9c98bd092b9df82ec5246 /tmp/nerdctl.tar.gz" | sha256sum -c - && \
     cd /tmp && tar -xzf /tmp/nerdctl.tar.gz && mv nerdctl /usr/bin/nerdctl && rm -rf /tmp/*
 
 COPY --from=immortal /go/src/github.com/immortal/immortal/build/amd64/ /usr/sbin/
@@ -79,13 +79,13 @@ RUN apt-get update && apt-get install -y docker.io && \
     mv /tmp/reviewdog /usr/bin/reviewdog && \
     rm -rf /tmp/*
 
-RUN wget https://github.com/aquasecurity/trivy/releases/download/v0.22.0/trivy_0.22.0_Linux-64bit.deb \
+RUN wget https://github.com/aquasecurity/trivy/releases/download/v0.23.0/trivy_0.23.0_Linux-64bit.deb \
         -O /tmp/trivy_Linux-64bit.deb  && \
-    echo "c2ebad7f22317cf42bb3e3c2786caa00652db8f0526ed260daafe81e309599a2  /tmp/trivy_Linux-64bit.deb" | shasum -a 256 -c && \
+    echo "521d8623fe1f99105c5165951c4b9fe715127a425b8200a460a5211ae5067c3b  /tmp/trivy_Linux-64bit.deb" | shasum -a 256 -c && \
     dpkg -i /tmp/trivy_Linux-64bit.deb && rm -f /tmp/trivy_Linux-64bit.deb
 
-RUN wget https://dl.k8s.io/v1.23.1/kubernetes-client-linux-amd64.tar.gz -O /tmp/kubernetes-client-linux-amd64.tar.gz && \
-    echo "aaf6c4f2f65b27902ce02069aa5a7c5b195099deb522fbe7638c5458fc1ba6c2fbe2eb00fa18edc952989dfc27c7a252b37792987c55dc044b88d4e350569891  /tmp/kubernetes-client-linux-amd64.tar.gz" | shasum -a 512 -c && \
+RUN wget https://dl.k8s.io/v1.23.3/kubernetes-client-linux-amd64.tar.gz -O /tmp/kubernetes-client-linux-amd64.tar.gz && \
+    echo "7ee6292a77d7042ed3589f998231985e82abd90143496a65e29b8141dd39dced5f9cd87a7eeba1efa4dbf61e5ddec9e7929c14b7afcdf01d83af322ddf839efb  /tmp/kubernetes-client-linux-amd64.tar.gz" | shasum -a 512 -c && \
     cd /tmp && tar -xzf /tmp/kubernetes-client-linux-amd64.tar.gz && mv kubernetes/client/bin/kubectl /usr/bin/kubectl && \
     wget https://get.helm.sh/helm-v3.7.2-linux-amd64.tar.gz -O /tmp/helm.tar.gz && \
     echo "f439e0be3fa6dd1863883d9c390ae232  /tmp/helm.tar.gz" | md5sum -c - && \
@@ -94,10 +94,10 @@ RUN wget https://dl.k8s.io/v1.23.1/kubernetes-client-linux-amd64.tar.gz -O /tmp/
 USER github
 WORKDIR /app
 
-ENV GITHUB_VERSION=2.285.1
+ENV GITHUB_VERSION=2.287.1
 RUN wget https://github.com/actions/runner/releases/download/v${GITHUB_VERSION}/actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz \
         -O actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz && \
-    echo "5fd98e1009ed13783d17cc73f13ea9a55f21b45ced915ed610d00668b165d3b2  actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz" | shasum -a 256 -c && \
+    echo "8fa64384d6fdb764797503cf9885e01273179079cf837bfc2b298b1a8fd01d52  actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz" | shasum -a 256 -c && \
     tar xzf ./actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz && \
     rm -f actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz
 
