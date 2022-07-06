@@ -64,6 +64,9 @@ spec:
           command: ["/usr/bin/dockerd","-H","tcp://127.0.0.1:2376"]
           args:
             - --config-file=/etc/docker-config/daemon.json
+          {{- if .Values.docker.mirrors }}
+            - --registry-mirror=http://{{ include "github-actions.fullname" . }}-mirrors:5000
+          {{- end }}
           volumeMounts:
             - name: config
               mountPath: /etc/docker-config
