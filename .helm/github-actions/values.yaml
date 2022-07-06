@@ -67,6 +67,10 @@ docker:
     pullPolicy: IfNotPresent
     # tag:
 
+  mirrors:
+    - host: docker.io
+      source: https://registry-1.docker.io
+
   configData: |
     {
       "experimental": true,

@@ -1,0 +1,18 @@
+{{- if .Values.docker.mirrors }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "github-actions.fullname" . }}-mirrors
+  labels:
+    {{- include "github-actions.labels" . | nindent 4 }}
+    app.kubernetes.io/component: docker-mirror
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5000
+      targetPort: 5000
+      protocol: TCP
+  selector:
+    {{- include "github-actions.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: docker-mirror
+{{- end }}
