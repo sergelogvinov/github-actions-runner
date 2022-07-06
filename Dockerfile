@@ -6,7 +6,7 @@ RUN git clone --single-branch --branch 0.24.3 --depth 1 https://github.com/immor
 RUN make build-linux
 
 #
-FROM alpine:3.15 AS docker-host
+FROM alpine:3.16 AS docker-host
 LABEL org.opencontainers.image.source https://github.com/sergelogvinov/github-actions-runner
 
 RUN apk --update add docker device-mapper && \
@@ -28,22 +28,22 @@ RUN apt-get update && apt-get install -y containerd iptables curl && \
     apt-get autoremove -y && apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-ARG BUILDKIT_VERSION=0.9.0
+ARG BUILDKIT_VERSION=0.10.3
 RUN fname="buildkit-v${BUILDKIT_VERSION}.${TARGETOS:-linux}-${TARGETARCH:-amd64}.tar.gz" && \
     curl -o "${fname}" -fSL "https://github.com/moby/buildkit/releases/download/v${BUILDKIT_VERSION}/${fname}" && \
-    echo "1b307268735c8f8e68b55781a6f4c03af38acc1bc29ba39ebaec6d422bccfb25  buildkit-v0.9.0.linux-amd64.tar.gz" | sha256sum -c && \
+    echo "fbc9c433cf77c5c00db6f797155edc60b44463524ae59a4961699dca15bcee00  ${fname}" | sha256sum -c && \
     tar xzf "${fname}" -C /usr && \
     rm -f "${fname}" /usr/bin/buildkit-qemu-* /usr/bin/buildkit-runc
 
-ARG CNI_PLUGINS_VERSION=1.0.0
+ARG CNI_PLUGINS_VERSION=1.1.1
 RUN fname="cni-plugins-${TARGETOS:-linux}-${TARGETARCH:-amd64}-v${CNI_PLUGINS_VERSION}.tgz" && \
   curl -o "${fname}" -fSL "https://github.com/containernetworking/plugins/releases/download/v${CNI_PLUGINS_VERSION}/${fname}" && \
-  echo "5894883eebe3e38f4474810d334b00dc5ec59bd01332d1f92ca4eb142a67d2e8  ${fname}" | sha256sum -c && \
+  echo "b275772da4026d2161bf8a8b41ed4786754c8a93ebfb6564006d5da7f23831e5  ${fname}" | sha256sum -c && \
   mkdir -p /opt/cni/bin && tar xzf "${fname}" -C /opt/cni/bin && \
   rm -f "${fname}"
 
-RUN curl -o /tmp/nerdctl.tar.gz -fSL https://github.com/containerd/nerdctl/releases/download/v0.16.1/nerdctl-0.16.1-linux-amd64.tar.gz && \
-    echo "543d58c057a5a59c67ca523016c1dac57f9a09d1d9e9c98bd092b9df82ec5246 /tmp/nerdctl.tar.gz" | sha256sum -c - && \
+RUN curl -o /tmp/nerdctl.tar.gz -fSL https://github.com/containerd/nerdctl/releases/download/v0.21.0/nerdctl-0.21.0-linux-amd64.tar.gz && \
+    echo "686aee1161d9bf4865f391aaa4957d416df13f00493d67797e1ee8aad68cd057 /tmp/nerdctl.tar.gz" | sha256sum -c - && \
     cd /tmp && tar -xzf /tmp/nerdctl.tar.gz && mv nerdctl /usr/bin/nerdctl && rm -rf /tmp/*
 
 COPY --from=immortal /go/src/github.com/immortal/immortal/build/amd64/ /usr/sbin/
@@ -79,10 +79,7 @@ RUN apt-get update && apt-get install -y docker.io && \
     mv /tmp/reviewdog /usr/bin/reviewdog && \
     rm -rf /tmp/*
 
-RUN wget https://github.com/aquasecurity/trivy/releases/download/v0.23.0/trivy_0.23.0_Linux-64bit.deb \
-        -O /tmp/trivy_Linux-64bit.deb  && \
-    echo "521d8623fe1f99105c5165951c4b9fe715127a425b8200a460a5211ae5067c3b  /tmp/trivy_Linux-64bit.deb" | shasum -a 256 -c && \
-    dpkg -i /tmp/trivy_Linux-64bit.deb && rm -f /tmp/trivy_Linux-64bit.deb
+COPY --from=aquasec/trivy:0.29.2 /usr/local/bin/trivy /usr/local/bin/trivy
 
 RUN wget https://dl.k8s.io/v1.23.3/kubernetes-client-linux-amd64.tar.gz -O /tmp/kubernetes-client-linux-amd64.tar.gz && \
     echo "7ee6292a77d7042ed3589f998231985e82abd90143496a65e29b8141dd39dced5f9cd87a7eeba1efa4dbf61e5ddec9e7929c14b7afcdf01d83af322ddf839efb  /tmp/kubernetes-client-linux-amd64.tar.gz" | shasum -a 512 -c && \
@@ -94,10 +91,10 @@ RUN wget https://dl.k8s.io/v1.23.3/kubernetes-client-linux-amd64.tar.gz -O /tmp/
 USER github
 WORKDIR /app
 
-ENV GITHUB_VERSION=2.287.1
+ENV GITHUB_VERSION=2.294.0
 RUN wget https://github.com/actions/runner/releases/download/v${GITHUB_VERSION}/actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz \
         -O actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz && \
-    echo "8fa64384d6fdb764797503cf9885e01273179079cf837bfc2b298b1a8fd01d52  actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz" | shasum -a 256 -c && \
+    echo "a19a09f4eda5716e5d48ba86b6b78fc014880c5619b9dba4a059eaf65e131780  actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz" | shasum -a 256 -c && \
     tar xzf ./actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz && \
     rm -f actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz
 
