@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "github-actions.fullname" . }}-metrics
+  labels:
+    {{- include "github-actions.labels" . | nindent 4 }}
+    app.kubernetes.io/component: metrics
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "github-actions.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: metrics
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9999"
+      labels:
+        {{- include "github-actions.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: metrics
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.metrics.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-metrics
+          securityContext:
+            {{- toYaml .Values.metrics.securityContext | nindent 12 }}
+          image: "{{ .Values.metrics.image.repository }}:{{ .Values.metrics.image.tag }}"
+          imagePullPolicy: {{ .Values.metrics.image.pullPolicy }}
+          env:
+            - name: PORt
+              value: "9999"
+            - name: GITHUB_REFRESH
+              value: "60"
+          envFrom:
+            - secretRef:
+                name: "{{ include "github-actions.fullname" . }}-metrics"
+          resources:
+            {{- toYaml .Values.metrics.resources | nindent 12 }}
+      {{- with .Values.metrics.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.metrics.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.metrics.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

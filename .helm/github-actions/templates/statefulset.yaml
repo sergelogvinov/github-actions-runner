@@ -4,6 +4,7 @@ metadata:
   name: {{ include "github-actions.fullname" . }}
   labels:
     {{- include "github-actions.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ghactions
 spec:
   serviceName: {{ include "github-actions.fullname" . }}
 {{- if not .Values.autoscaling.enabled }}
@@ -15,6 +16,7 @@ spec:
   selector:
     matchLabels:
       {{- include "github-actions.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: ghactions
   template:
     metadata:
     {{- with .Values.podAnnotations }}
@@ -23,6 +25,7 @@ spec:
     {{- end }}
       labels:
         {{- include "github-actions.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: ghactions
     spec:
       enableServiceLinks: false
       {{- with .Values.imagePullSecrets }}
