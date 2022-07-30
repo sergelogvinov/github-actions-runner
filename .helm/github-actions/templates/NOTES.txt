@@ -1,1 +1,13 @@
-1. Get the application URL by running these commands:
+{{- if .Values.autoscaling.enabled }}
+
+1. Do not forget to add this rules to prometheus adapter:
+    - seriesQuery: '{__name__="github_runner_status",app_kubernetes_io_name="github-actions"}'
+      resources:
+        overrides:
+          kubernetes_namespace: {resource: "namespace"}
+          app_kubernetes_io_instance: {group: "apps", resource: "deployment"}
+      name:
+        as: "github_actions_worker_usage_ratio"
+      metricsQuery: 'sum(<<.Series>>{<<.LabelMatchers>>,busy="true"}) BY (<<.GroupBy>>,repo) / sum(<<.Series>>{}) BY (<<.GroupBy>>,repo) * 100 OR on () topk(1, <<.Series>>{<<.LabelMatchers>>})'
+
+{{- end }}
