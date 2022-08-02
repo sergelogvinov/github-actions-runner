@@ -19,24 +19,28 @@ spec:
         - type: Pods
           value: 1
           periodSeconds: 120
-      stabilizationWindowSeconds: 300
+      stabilizationWindowSeconds:  {{ .Values.autoscaling.scaleDown.stabilizationWindowSeconds }}
     scaleUp:
       selectPolicy: Min
       policies:
         - type: Pods
           value: 1
           periodSeconds: 120
-      stabilizationWindowSeconds: 30
+      stabilizationWindowSeconds: {{ .Values.autoscaling.scaleUp.stabilizationWindowSeconds }}
   metrics:
     - type: Object
       object:
         metric:
           name: github_actions_worker_usage_ratio
         describedObject:
+        {{- if .Values.autoscaling.object }}
+          {{ toYaml .Values.autoscaling.object | nindent 10 }}
+        {{- else }}
           apiVersion: apps/v1
           kind: Deployment
           name: {{ include "github-actions.fullname" . }}
+        {{- end }}
         target:
           type: Value
-          value: {{ .Values.autoscaling.targetUtilizationPercentage}}
+          value: {{ .Values.autoscaling.targetUtilizationPercentage }}
 {{- end }}

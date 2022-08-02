@@ -57,6 +57,10 @@ autoscaling:
   minReplicas: 1
   maxReplicas: 9
   targetUtilizationPercentage: 90
+  scaleDown:
+    stabilizationWindowSeconds: 600
+  scaleUp:
+    stabilizationWindowSeconds: 30
 
 docker:
   enabled: false
