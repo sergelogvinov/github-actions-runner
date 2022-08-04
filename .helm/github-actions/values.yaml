@@ -31,18 +31,18 @@ serviceAccount:
 
 podAnnotations: {}
 
-podSecurityContext:
-  fsGroup: 1000
+podSecurityContext: {}
+  # fsGroup: 1000
+  # fsGroupChangePolicy: "OnRootMismatch"
 
 securityContext:
+  allowPrivilegeEscalation: false
+  seccompProfile:
+    type: RuntimeDefault
   runAsUser: 1000
   runAsGroup: 1000
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
+  capabilities:
+    drop: ["ALL"]
 
 resources:
   # limits:
@@ -82,6 +82,8 @@ docker:
 
   securityContext:
     privileged: true
+    runAsUser: 0
+    runAsGroup: 0
 
   resources:
     limits:
