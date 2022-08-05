@@ -32,7 +32,7 @@ serviceAccount:
 podAnnotations: {}
 
 podSecurityContext: {}
-  # fsGroup: 1000
+  # fsGroup: 0
   # fsGroupChangePolicy: "OnRootMismatch"
 
 securityContext:
@@ -40,7 +40,7 @@ securityContext:
   seccompProfile:
     type: RuntimeDefault
   runAsUser: 1000
-  runAsGroup: 1000
+  runAsGroup: 0
   capabilities:
     drop: ["ALL"]
 
@@ -103,7 +103,7 @@ docker:
   #   - name: certs
   #     secret:
   #       secretName: domain.com-auth-tls
-  #       defaultMode: 256
+  #       defaultMode: 288
   #       items:
   #         - key: tls.crt
   #           path: client.cert

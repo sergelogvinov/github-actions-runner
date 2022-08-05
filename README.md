@@ -79,3 +79,19 @@ Docker host has docker-registry on localhost.
 You can use __--cache-from__ to receive build cache from local registry.
 
 ![Build-machine](docs/build–machine.svg)
+
+## Pricing
+
+* One worker requares - 4CPU-16Gb
+* Average worker busy time per day - 9h (8h-5days + 1h-5days nightly tests)
+
+| Instance type | Capacity | Workers count | Price month | Comment
+|---|---|---|---|---|
+| Bare-metal | 24CPU-128GB-1Tb(NVME)  | 6 | __100__ | monthly rent |
+| Bare-metal | 12CPU-64GB-512Gb(NVME) x 2   | 6 | 65 * 2 = __130__ | monthly rent |
+| VM         | 4CPU-16GB-160Gb(SSD)  | 6 | 19 * 6 = __114__ | monthly rent |
+| VM                    | 4CPU-16GB-160Gb(SSD)  | 6 | 0.0312 * 6 * 9 * 20 = __33__ | hourly rent |
+| GCP (n2d-standard-4)  | 4CPU-16GB        | 6 | 108 * 6 = __652__ | monthly rent |
+| GCP (n2d-standard-4)  | 4CPU-16GB        | 6 | 0.184 * 6 * 9 * 20 = __198__ | hourly rent |
+| GCP (n2d-standard-4) spot | 4CPU-16GB-64GB(SSD) | 6 | ??? * 6 * 9 * 20 + 12 = __93__ | hourly rent |
+| Github hosted         | ? | 6 | 0.008 * 60 * 6 * 9 * 20 = __518__ | hourly rent |
