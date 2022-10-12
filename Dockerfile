@@ -70,31 +70,31 @@ RUN adduser --disabled-password --home /home/github --uid 1000 --gecos "GitHubAg
     install -m 0775 -o github -g github -d /app && \
     install -m 0775 -o github -g github -d /home/github/.ansible -d /home/github/builds
 
-ENV REVIEWDOG_VERSION=0.13.1
+ENV REVIEWDOG_VERSION=0.14.1
 RUN apt-get update && apt-get install -y docker.io && \
     wget https://github.com/reviewdog/reviewdog/releases/download/v${REVIEWDOG_VERSION}/reviewdog_${REVIEWDOG_VERSION}_Linux_x86_64.tar.gz \
         -O /tmp/reviewdog.tar.gz  && \
-    echo "08a5a323939101195af1d420ab6be3a50ec12f58e3419e3fcd07b6871f0b9a7e  /tmp/reviewdog.tar.gz" | shasum -a 256 -c && \
+    echo "bf0ada422e13a94aafb26bcd8ade3ae6d98e6a3db4a9c1cb17686ee64e021314  /tmp/reviewdog.tar.gz" | shasum -a 256 -c && \
     cd /tmp && tar --no-same-owner -xzf /tmp/reviewdog.tar.gz && \
     mv /tmp/reviewdog /usr/bin/reviewdog && \
     rm -rf /tmp/*
 
-COPY --from=aquasec/trivy:0.29.2 /usr/local/bin/trivy /usr/local/bin/trivy
+COPY --from=aquasec/trivy:0.32.1 /usr/local/bin/trivy /usr/local/bin/trivy
 
 RUN wget https://dl.k8s.io/v1.23.3/kubernetes-client-linux-amd64.tar.gz -O /tmp/kubernetes-client-linux-amd64.tar.gz && \
     echo "7ee6292a77d7042ed3589f998231985e82abd90143496a65e29b8141dd39dced5f9cd87a7eeba1efa4dbf61e5ddec9e7929c14b7afcdf01d83af322ddf839efb  /tmp/kubernetes-client-linux-amd64.tar.gz" | shasum -a 512 -c && \
     cd /tmp && tar -xzf /tmp/kubernetes-client-linux-amd64.tar.gz && mv kubernetes/client/bin/kubectl /usr/bin/kubectl && \
-    wget https://get.helm.sh/helm-v3.7.2-linux-amd64.tar.gz -O /tmp/helm.tar.gz && \
-    echo "f439e0be3fa6dd1863883d9c390ae232  /tmp/helm.tar.gz" | md5sum -c - && \
+    wget https://get.helm.sh/helm-v3.10.0-linux-amd64.tar.gz -O /tmp/helm.tar.gz && \
+    echo "bf56beb418bb529b5e0d6d43d56654c5a03f89c98400b409d1013a33d9586474 /tmp/helm.tar.gz" | sha256sum -c - && \
     cd /tmp && tar -xzf /tmp/helm.tar.gz && mv linux-amd64/helm /usr/bin/helm && rm -rf /tmp/*
 
 USER github
 WORKDIR /app
 
-ENV GITHUB_VERSION=2.294.0
+ENV GITHUB_VERSION=2.298.2
 RUN wget https://github.com/actions/runner/releases/download/v${GITHUB_VERSION}/actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz \
         -O actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz && \
-    echo "a19a09f4eda5716e5d48ba86b6b78fc014880c5619b9dba4a059eaf65e131780  actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz" | shasum -a 256 -c && \
+    echo "0bfd792196ce0ec6f1c65d2a9ad00215b2926ef2c416b8d97615265194477117  actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz" | shasum -a 256 -c && \
     tar xzf ./actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz && \
     rm -f actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz
 
