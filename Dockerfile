@@ -1,5 +1,5 @@
 #
-FROM golang:1.14-buster AS immortal
+FROM golang:1.19-buster AS immortal
 
 WORKDIR /go/src/github.com/immortal/immortal
 RUN git clone --single-branch --branch 0.24.3 --depth 1 https://github.com/immortal/immortal.git .
