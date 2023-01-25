@@ -6,7 +6,7 @@ RUN git clone --single-branch --branch 0.24.3 --depth 1 https://github.com/immor
 RUN make build-linux
 
 #
-FROM alpine:3.16 AS docker-host
+FROM alpine:3.17 AS docker-host
 LABEL org.opencontainers.image.source https://github.com/sergelogvinov/github-actions-runner
 
 RUN apk --update add docker device-mapper && \
