@@ -42,11 +42,6 @@ RUN fname="cni-plugins-${TARGETOS:-linux}-${TARGETARCH:-amd64}-v${CNI_PLUGINS_VE
   mkdir -p /opt/cni/bin && tar xzf "${fname}" -C /opt/cni/bin && \
   rm -f "${fname}"
 
-ARG NERDCTL_VERSION=1.0.0
-RUN curl -o /tmp/nerdctl.tar.gz -fSL https://github.com/containerd/nerdctl/releases/download/v${NERDCTL_VERSION}/nerdctl-${NERDCTL_VERSION}-linux-amd64.tar.gz && \
-    echo "3e993d714e6b88d1803a58d9ff5a00d121f0544c35efed3a3789e19d6ab36964 /tmp/nerdctl.tar.gz" | sha256sum -c - && \
-    cd /tmp && tar -xzf /tmp/nerdctl.tar.gz && mv nerdctl /usr/bin/nerdctl && rm -rf /tmp/*
-
 COPY --from=immortal /go/src/github.com/immortal/immortal/build/amd64/ /usr/sbin/
 COPY etc/immortal /etc/immortal
 
@@ -80,22 +75,28 @@ RUN apt-get update && apt-get install -y docker.io && \
     mv /tmp/reviewdog /usr/bin/reviewdog && \
     rm -rf /tmp/*
 
-COPY --from=aquasec/trivy:0.35.0 /usr/local/bin/trivy /usr/local/bin/trivy
+COPY --from=aquasec/trivy:0.36.1 /usr/local/bin/trivy /usr/local/bin/trivy
 
+ARG HELM_VERSION=3.10.2 NERDCTL_VERSION=1.0.0
 RUN wget https://dl.k8s.io/v1.23.3/kubernetes-client-linux-amd64.tar.gz -O /tmp/kubernetes-client-linux-amd64.tar.gz && \
-    echo "7ee6292a77d7042ed3589f998231985e82abd90143496a65e29b8141dd39dced5f9cd87a7eeba1efa4dbf61e5ddec9e7929c14b7afcdf01d83af322ddf839efb  /tmp/kubernetes-client-linux-amd64.tar.gz" | shasum -a 512 -c && \
     cd /tmp && tar -xzf /tmp/kubernetes-client-linux-amd64.tar.gz && mv kubernetes/client/bin/kubectl /usr/bin/kubectl && \
-    wget https://get.helm.sh/helm-v3.10.2-linux-amd64.tar.gz -O /tmp/helm.tar.gz && \
+    wget https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz -O /tmp/helm.tar.gz && \
     echo "2315941a13291c277dac9f65e75ead56386440d3907e0540bf157ae70f188347 /tmp/helm.tar.gz" | sha256sum -c - && \
-    cd /tmp && tar -xzf /tmp/helm.tar.gz && mv linux-amd64/helm /usr/bin/helm && rm -rf /tmp/*
+    cd /tmp && tar -xzf /tmp/helm.tar.gz && mv linux-amd64/helm /usr/bin/helm && rm -rf /tmp/* && \
+    wget https://github.com/containerd/nerdctl/releases/download/v${NERDCTL_VERSION}/nerdctl-${NERDCTL_VERSION}-linux-amd64.tar.gz -O /tmp/nerdctl.tar.gz && \
+    echo "3e993d714e6b88d1803a58d9ff5a00d121f0544c35efed3a3789e19d6ab36964 /tmp/nerdctl.tar.gz" | sha256sum -c - && \
+    cd /tmp && tar -xzf /tmp/nerdctl.tar.gz && mv nerdctl /usr/bin/nerdctl && rm -rf /tmp/* && \
+    wget https://github.com/mozilla/sops/releases/download/v3.7.1/sops-v3.7.1.linux -O /tmp/sops && \
+    echo "6d4a087b325525f160c9a68fd2fd2df8 /tmp/sops" | md5sum -c - && \
+    install -o root -g root /tmp/sops /usr/bin/sops && rm -rf /tmp/*
 
 USER github
 WORKDIR /app
 
-ENV GITHUB_VERSION=2.299.1
+ENV GITHUB_VERSION=2.301.1
 RUN wget https://github.com/actions/runner/releases/download/v${GITHUB_VERSION}/actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz \
         -O actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz && \
-    echo "147c14700c6cb997421b9a239c012197f11ea9854cd901ee88ead6fe73a72c74  actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz" | shasum -a 256 -c && \
+    echo "3ee9c3b83de642f919912e0594ee2601835518827da785d034c1163f8efdf907  actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz" | shasum -a 256 -c && \
     tar xzf ./actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz && \
     rm -f actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz
 
