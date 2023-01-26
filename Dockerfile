@@ -51,7 +51,7 @@ VOLUME ["/var/lib"]
 ENTRYPOINT ["/usr/sbin/immortaldir","/etc/immortal"]
 
 #
-FROM debian:buster AS github-actions-runner
+FROM debian:11-slim AS github-actions-runner
 LABEL org.opencontainers.image.source https://github.com/sergelogvinov/github-actions-runner
 
 ENV DEBIAN_FRONTEND=noninteractive
