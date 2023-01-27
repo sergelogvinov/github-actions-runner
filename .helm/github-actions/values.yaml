@@ -75,12 +75,17 @@ docker:
 
   configData: |
     {
-      "experimental": true,
+      "features": {
+        "buildkit" : true
+      },
       "mtu": 1300,
       "log-level": "warn"
     }
 
   securityContext:
+    # procMount: Unmasked
+    # seccompProfile:
+    #   type: Unconfined
     privileged: true
     runAsUser: 0
     runAsGroup: 0
@@ -120,6 +125,10 @@ docker:
       - ReadWriteOnce
     size: 100Gi
     annotations: {}
+
+initScript: ~
+  # #!/bin/sh
+  # docker buildx create --name builder --driver remote tcp://build-machine:1234 --driver-opt cacert=/.certs/ca.pem,cert=/.certs/cert.pem,key=/.certs/key.pem --use
 
 metrics:
   enabled: false

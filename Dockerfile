@@ -75,6 +75,7 @@ RUN apt-get update && apt-get install -y docker.io && \
     mv /tmp/reviewdog /usr/bin/reviewdog && \
     rm -rf /tmp/*
 
+COPY --from=docker/buildx-bin:0.10.0 /buildx /usr/libexec/docker/cli-plugins/docker-buildx
 COPY --from=aquasec/trivy:0.36.1 /usr/local/bin/trivy /usr/local/bin/trivy
 
 ARG HELM_VERSION=3.10.2 NERDCTL_VERSION=1.0.0
@@ -89,6 +90,12 @@ RUN wget https://dl.k8s.io/v1.23.3/kubernetes-client-linux-amd64.tar.gz -O /tmp/
     wget https://github.com/mozilla/sops/releases/download/v3.7.1/sops-v3.7.1.linux -O /tmp/sops && \
     echo "6d4a087b325525f160c9a68fd2fd2df8 /tmp/sops" | md5sum -c - && \
     install -o root -g root /tmp/sops /usr/bin/sops && rm -rf /tmp/*
+
+COPY --from=amazon/aws-cli:2.9.18 /usr/local/aws-cli /usr/local/aws-cli
+RUN ln -s /usr/local/aws-cli/v2/current/bin/aws /usr/local/bin/aws
+
+ENV HELM_DATA_HOME=/usr/local/share/helm
+RUN helm plugin install https://github.com/jkroepke/helm-secrets --version v3.15.0
 
 USER github
 WORKDIR /app

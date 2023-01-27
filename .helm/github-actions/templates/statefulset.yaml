@@ -36,12 +36,35 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       terminationGracePeriodSeconds: 60
+      initContainers:
+        {{- if .Values.initScript }}
+        - name: {{ .Chart.Name }}-init
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/bin/sh","-e","/init/initScript.sh"]
+          envFrom:
+            - secretRef:
+                name: "{{ include "github-actions.fullname" . }}"
+          volumeMounts:
+          {{- if .Values.extraVolumeMounts }}
+            {{ toYaml .Values.extraVolumeMounts | nindent 12 }}
+          {{- end }}
+            - name: home
+              mountPath: /home/github
+            - name: init
+              mountPath: /init
+            - name: run
+              mountPath: /run
+        {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          # command: ["sleep","60000"]
           env:
             - name: RUNNER_WORK_FOLDER
               value: /builds
@@ -52,6 +75,8 @@ spec:
           {{- if .Values.extraVolumeMounts }}
             {{ toYaml .Values.extraVolumeMounts | nindent 12 }}
           {{- end }}
+            - name: home
+              mountPath: /home/github
             - name: builds
               mountPath: /builds
             - name: run
@@ -100,6 +125,8 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
+        - name: home
+          emptyDir: {}
         - name: builds
           emptyDir: {}
         - name: run
@@ -107,6 +134,15 @@ spec:
             medium: Memory
       {{- if .Values.extraVolumes }}
         {{ toYaml .Values.extraVolumes | nindent 8 }}
+      {{- end }}
+      {{- if .Values.initScript }}
+        - name: init
+          configMap:
+            name: {{ include "github-actions.fullname" . }}
+            defaultMode: 365
+            items:
+              - key: initScript.sh
+                path: initScript.sh
       {{- end }}
       {{- if .Values.docker.enabled }}
         - name: config

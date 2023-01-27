@@ -12,9 +12,9 @@ fullnameOverride: ""
 buildkit:
   enabled: false
   image:
-    repository: ghcr.io/sergelogvinov/github-actions-runner/containerd
+    repository: moby/buildkit
     pullPolicy: IfNotPresent
-    tag: release_v2.299.1
+    tag: "buildx-stable-1"
 
   extraMounts: []
 
@@ -27,17 +27,26 @@ buildkit:
     gid = 0
 
     [worker.containerd]
-      address = "/run/containerd/containerd.sock"
+      enabled = false
+
+    [worker.oci]
       enabled = true
-      platforms = [ "linux/amd64" ]
-      namespace = "buildkit"
+      gc = true
+      gckeepstorage = 10000
+    [[worker.oci.gcpolicy]]
+        keepBytes = 512000000
+        keepDuration = 172800
+        filters = [ "type==source.local", "type==exec.cachemount", "type==source.git.checkout"]
+    [[worker.oci.gcpolicy]]
+      all = true
+      keepBytes = 1024000000
 
 docker:
   enabled: false
   image:
     repository: ghcr.io/sergelogvinov/github-actions-runner/docker
     pullPolicy: IfNotPresent
-    tag: release_v2.285.1
+    tag: ""
 
   extraMounts: []
     # - name: certs
@@ -55,9 +64,10 @@ docker:
 
   configData: |
     {
-      "experimental": true,
-      "mtu": 1300,
-      "log-level": "warn"
+      "features": {
+        "buildkit" : true
+      },
+      "mtu": 1300
     }
 
 registry:
@@ -120,10 +130,14 @@ podAnnotations: {}
   # container.apparmor.security.beta.kubernetes.io/buildkitd: unconfined
   # container.seccomp.security.alpha.kubernetes.io/buildkitd: unconfined
 
-podSecurityContext: {}
+podSecurityContext:
+  seccompProfile:
+    type: Unconfined
   # sysctls:
   #   - name: kernel.unprivileged_userns_clone
   #     value: "1"
+  # runAsUser: 0
+  # runAsGroup: 0
 
 securityContext:
   privileged: true

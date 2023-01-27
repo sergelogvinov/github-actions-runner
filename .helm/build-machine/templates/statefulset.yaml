@@ -40,20 +40,9 @@ spec:
       {{- end }}
       containers:
       {{- if .Values.buildkit.enabled }}
-        - name: containerd
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.buildkit.image.repository }}:{{ .Values.buildkit.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.buildkit.image.pullPolicy }}
-          command: ["/usr/bin/containerd"]
-          volumeMounts:
-            - name: run
-              mountPath: /run
-            - name: workdir
-              mountPath: /var/lib
         - name: buildkit
           securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
+            privileged: true
           image: "{{ .Values.buildkit.image.repository }}:{{ .Values.buildkit.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.buildkit.image.pullPolicy }}
           command: ["/usr/bin/buildkitd"]
@@ -91,8 +80,6 @@ spec:
             - name: buildkit-{{ .name }}
               mountPath: {{ .mountPath }}
           {{- end }}
-            - name: run
-              mountPath: /run
             - name: workdir
               mountPath: /var/lib
           resources:
@@ -138,7 +125,7 @@ spec:
               mountPath: {{ .mountPath }}
           {{- end }}
             - name: workdir
-              mountPath: /var/lib/docker
+              mountPath: /var/lib
             - name: modules
               mountPath: /lib/modules
               readOnly: true
@@ -190,8 +177,6 @@ spec:
             secretName: {{ include "build-machine.tlsCerts" . }}
       {{- end }}
       {{- if .Values.buildkit.enabled }}
-        - name: run
-          emptyDir: {}
         {{- range .Values.buildkit.extraMounts }}
         - name: buildkit-{{ .name }}
           {{- if .hostPath }}
