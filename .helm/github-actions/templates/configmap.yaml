@@ -5,6 +5,8 @@ metadata:
   labels:
     {{- include "github-actions.labels" . | nindent 4 }}
 data:
+  buildkitd.toml: |-
+    {{ .Values.buildkit.configData | nindent 4 }}
   daemon.json: |-
     {{ .Values.docker.configData | nindent 4 }}
 {{- if .Values.initScript }}

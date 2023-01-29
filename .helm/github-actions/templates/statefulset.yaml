@@ -86,7 +86,9 @@ spec:
       {{- if .Values.docker.enabled }}
         - name: {{ .Chart.Name }}-docker
           securityContext:
-            {{- toYaml .Values.docker.securityContext | nindent 12 }}
+            privileged: true
+            seccompProfile:
+              type: Unconfined
           image: "{{ .Values.docker.image.repository }}:{{ .Values.docker.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.docker.image.pullPolicy }}
           command: ["/usr/bin/dockerd","-H","tcp://127.0.0.1:2376"]
@@ -102,7 +104,7 @@ spec:
             {{ toYaml .Values.docker.extraVolumeMounts | nindent 12 }}
           {{- end }}
             - name: workdir
-              mountPath: /var/lib/docker
+              mountPath: /var/lib
             - name: run
               mountPath: /run
             - name: modules
@@ -110,6 +112,36 @@ spec:
               readOnly: true
           resources:
             {{- toYaml .Values.docker.resources | nindent 12 }}
+      {{- end }}
+      {{- if .Values.buildkit.enabled }}
+        - name: {{ .Chart.Name }}-buildkit
+          securityContext:
+            privileged: true
+            seccompProfile:
+              type: Unconfined
+          image: "{{ .Values.buildkit.image.repository }}:{{ .Values.buildkit.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.buildkit.image.pullPolicy }}
+          command: ["/usr/bin/buildkitd"]
+          args:
+            - --addr=unix:///run/buildkit/buildkitd.sock
+            - --addr=tcp://127.0.0.1:1234
+          livenessProbe:
+            exec:
+              command:
+                - buildctl
+                - debug
+                - workers
+            initialDelaySeconds: 5
+            periodSeconds: 60
+          volumeMounts:
+            - name: config
+              mountPath: /etc/buildkit
+            - name: workdir
+              mountPath: /var/lib
+            - name: run
+              mountPath: /run
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
       {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
@@ -155,18 +187,18 @@ spec:
           hostPath:
             path: /lib/modules
       {{- end }}
-  {{- if not .Values.docker.persistence.enabled }}
+  {{- if not .Values.persistence.enabled }}
         - name: workdir
           emptyDir: {}
-  {{- else if and .Values.docker.persistence.enabled .Values.docker.persistence.existingClaim }}
+  {{- else if and .Values.persistence.enabled .Values.persistence.existingClaim }}
         - name: workdir
           persistentVolumeClaim:
-            claimName: {{ .Values.docker.persistence.existingClaim }}
+            claimName: {{ .Values.persistence.existingClaim }}
   {{- else }}
   volumeClaimTemplates:
     - metadata:
         name: workdir
-      {{- with .Values.docker.persistence.annotations }}
+      {{- with .Values.persistence.annotations }}
         annotations:
         {{- range $key, $value := . }}
           {{ $key }}: {{ $value }}
@@ -174,17 +206,17 @@ spec:
       {{- end }}
       spec:
         accessModes:
-        {{- range .Values.docker.persistence.accessModes }}
+        {{- range .Values.persistence.accessModes }}
           - {{ . | quote }}
         {{- end }}
         resources:
           requests:
-            storage: {{ .Values.docker.persistence.size | quote }}
-      {{- if .Values.docker.persistence.storageClass }}
-      {{- if (eq "-" .Values.docker.persistence.storageClass) }}
+            storage: {{ .Values.persistence.size | quote }}
+      {{- if .Values.persistence.storageClass }}
+      {{- if (eq "-" .Values.persistence.storageClass) }}
         storageClassName: ""
       {{- else }}
-        storageClassName: "{{ .Values.docker.persistence.storageClass }}"
+        storageClassName: "{{ .Values.persistence.storageClass }}"
       {{- end }}
       {{- end }}
   {{- end }}

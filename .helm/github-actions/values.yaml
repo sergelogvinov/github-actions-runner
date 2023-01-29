@@ -30,6 +30,8 @@ serviceAccount:
   name: ""
 
 podAnnotations: {}
+#   container.apparmor.security.beta.kubernetes.io/github-actions-docker: unconfined
+
 
 podSecurityContext: {}
   # fsGroup: 0
@@ -82,13 +84,14 @@ docker:
       "log-level": "warn"
     }
 
-  securityContext:
-    # procMount: Unmasked
-    # seccompProfile:
-    #   type: Unconfined
-    privileged: true
-    runAsUser: 0
-    runAsGroup: 0
+  # securityContext:
+  #   # rawProc: true
+  #   # procMount: Unmasked
+  #   # seccompProfile:
+  #   #   type: Unconfined
+  #   privileged: true
+  #   runAsUser: 0
+  #   runAsGroup: 0
 
   resources:
     limits:
@@ -115,16 +118,35 @@ docker:
   #         - key: tls.key
   #           path: client.key
 
-  persistence:
-    enabled: false
-    ## A manually managed Persistent Volume and Claim
-    ## If defined, PVC must be created manually before volume will be bound
-    # existingClaim:
-    # storageClass: "-"
-    accessModes:
-      - ReadWriteOnce
-    size: 100Gi
-    annotations: {}
+buildkit:
+  enabled: false
+  image:
+    repository: moby/buildkit
+    pullPolicy: IfNotPresent
+    tag: "buildx-stable-1"
+
+  configData: |
+    root = "/var/lib/buildkit"
+
+    [grpc]
+    address = [ "unix:///run/buildkit/buildkitd.sock", "tcp://0.0.0.0:1234" ]
+    uid = 0
+    gid = 0
+
+    [worker.containerd]
+      enabled = false
+
+    [worker.oci]
+      enabled = true
+      gc = true
+      gckeepstorage = 10000
+    [[worker.oci.gcpolicy]]
+        keepBytes = 512000000
+        keepDuration = 172800
+        filters = [ "type==source.local", "type==exec.cachemount", "type==source.git.checkout"]
+    [[worker.oci.gcpolicy]]
+      all = true
+      keepBytes = 1024000000
 
 initScript: ~
   # #!/bin/sh
@@ -136,12 +158,13 @@ metrics:
   envs:
     EXPORT_FIELDS: repo,head_branch,workflow,event,status
     # GITHUB_TOKEN: Personal Access Token
+    # GITHUB_ORGAS: <orga>
     # GITHUB_REPOS: <orga>/<repo>,<orga>/<repo2>
 
   image:
     repository: ghcr.io/sergelogvinov/github-actions-exporter
     pullPolicy: IfNotPresent
-    tag: "v1.8.1"
+    tag: "v1.9.0-beta"
 
   nodeSelector: {}
   tolerations: []
@@ -154,6 +177,17 @@ tolerations: []
 # soft/hard
 podAntiAffinityPreset: soft
 affinity: {}
+
+persistence:
+  enabled: false
+  ## A manually managed Persistent Volume and Claim
+  ## If defined, PVC must be created manually before volume will be bound
+  # existingClaim:
+  # storageClass: "-"
+  accessModes:
+    - ReadWriteOnce
+  size: 100Gi
+  annotations: {}
 
 extraVolumeMounts: []
 ## Additional volumeMounts to the main container.
