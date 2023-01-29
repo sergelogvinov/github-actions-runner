@@ -30,7 +30,8 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       securityContext:
-        {{- toYaml .Values.metrics.podSecurityContext | nindent 8 }}
+        fsGroup: 65534
+        fsGroupChangePolicy: "OnRootMismatch"
       containers:
         - name: {{ .Chart.Name }}-metrics
           securityContext:
@@ -38,15 +39,29 @@ spec:
           image: "{{ .Values.metrics.image.repository }}:{{ .Values.metrics.image.tag }}"
           imagePullPolicy: {{ .Values.metrics.image.pullPolicy }}
           env:
-            - name: PORt
+            - name: PORT
               value: "9999"
             - name: GITHUB_REFRESH
               value: "60"
+            {{ if .Values.metrics.appKey }}
+            - name: GITHUB_APP_PRIVATE_KEY
+              value: /etc/github/key
+            {{- end }}
           envFrom:
             - secretRef:
                 name: "{{ include "github-actions.fullname" . }}-metrics"
           resources:
             {{- toYaml .Values.metrics.resources | nindent 12 }}
+      {{ if .Values.metrics.appKey }}
+          volumeMounts:
+            - name: key
+              mountPath: /etc/github
+      volumes:
+        - name: key
+          secret:
+            secretName: {{ include "github-actions.fullname" . }}-key
+            defaultMode: 288
+      {{- end }}
       {{- with .Values.metrics.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

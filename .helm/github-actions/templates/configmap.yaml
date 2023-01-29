@@ -5,10 +5,61 @@ metadata:
   labels:
     {{- include "github-actions.labels" . | nindent 4 }}
 data:
+  mirrors.eskip: |-
+    healthz: Path("/healthz") -> inlineContent("ok")
+        -> disableAccessLog() -> <shunt>;
+
+    {{- range $inx, $val := .Values.docker.mirrors }}
+    {{ $val.host | replace "." "" }}: PathSubtree("/{{ $val.host | replace "." "-" }}/v2/") -> modPath("/{{ $val.host | replace "." "-" }}/", "/")
+        -> enableAccessLog(5) -> "http://127.0.0.1:{{ add 5000 $inx }}";
+    {{- end }}
+
+    docker: PathSubtree("/v2/")
+        -> "http://127.0.0.1:5000";
+
+    default: * -> status(404) -> <shunt>;
+
   buildkitd.toml: |-
-    {{ .Values.buildkit.configData | nindent 4 }}
+    root = "/var/lib/buildkit"
+
+    [grpc]
+    address = [ "unix:///run/buildkit/buildkitd.sock", "tcp://0.0.0.0:1234" ]
+    uid = 0
+    gid = 0
+
+    [worker.containerd]
+      enabled = false
+
+    [worker.oci]
+      enabled = true
+      gc = true
+      gckeepstorage = 10000
+    [[worker.oci.gcpolicy]]
+        keepBytes = 512000000
+        keepDuration = 172800
+        filters = [ "type==source.local", "type==exec.cachemount", "type==source.git.checkout"]
+    [[worker.oci.gcpolicy]]
+      all = true
+      keepBytes = 1024000000
+
+    {{- range $inx, $val := .Values.docker.mirrors }}
+    [registry."{{ $val.host }}"]
+      mirrors = ["{{ include "github-actions.fullname" $ }}-mirrors/{{ $val.host | replace "." "-" }}"]
+    {{- end }}
+    {{- range $inx, $val := .Values.docker.mirrors }}
+    [registry."{{ include "github-actions.fullname" $ }}-mirrors/{{ $val.host | replace "." "-" }}"]
+      http = true
+    {{- end }}
+
   daemon.json: |-
-    {{ .Values.docker.configData | nindent 4 }}
+    {
+      "features": {
+        "buildkit" : true
+      },
+      "mtu": 1300,
+      "log-level": "warn"
+    }
+
 {{- if .Values.initScript }}
   initScript.sh: |
     {{ .Values.initScript | nindent 4 }}

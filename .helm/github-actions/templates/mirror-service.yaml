@@ -5,14 +5,14 @@ metadata:
   name: {{ include "github-actions.fullname" . }}-mirrors
   labels:
     {{- include "github-actions.labels" . | nindent 4 }}
-    app.kubernetes.io/component: docker-mirror
+    app.kubernetes.io/component: mirrors
 spec:
   type: ClusterIP
   ports:
-    - port: 5000
-      targetPort: 5000
+    - port: 80
+      targetPort: 9090
       protocol: TCP
   selector:
     {{- include "github-actions.selectorLabels" . | nindent 4 }}
-    app.kubernetes.io/component: docker-mirror
+    app.kubernetes.io/component: mirrors
 {{- end }}

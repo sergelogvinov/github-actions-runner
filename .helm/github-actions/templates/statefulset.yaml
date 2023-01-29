@@ -95,7 +95,7 @@ spec:
           args:
             - --config-file=/etc/docker-config/daemon.json
           {{- if .Values.docker.mirrors }}
-            - --registry-mirror=http://{{ include "github-actions.fullname" . }}-mirrors:5000
+            - --registry-mirror=http://{{ include "github-actions.fullname" . }}-mirrors
           {{- end }}
           volumeMounts:
             - name: config
