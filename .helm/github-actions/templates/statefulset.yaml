@@ -51,8 +51,6 @@ spec:
           {{- if .Values.extraVolumeMounts }}
             {{ toYaml .Values.extraVolumeMounts | nindent 12 }}
           {{- end }}
-            - name: home
-              mountPath: /home/github
             - name: init
               mountPath: /init
             - name: run
@@ -75,8 +73,6 @@ spec:
           {{- if .Values.extraVolumeMounts }}
             {{ toYaml .Values.extraVolumeMounts | nindent 12 }}
           {{- end }}
-            - name: home
-              mountPath: /home/github
             - name: builds
               mountPath: /builds
             - name: run
@@ -103,8 +99,8 @@ spec:
           {{- if .Values.docker.extraVolumeMounts }}
             {{ toYaml .Values.docker.extraVolumeMounts | nindent 12 }}
           {{- end }}
-            - name: workdir
-              mountPath: /var/lib
+            - name: workdir-docker
+              mountPath: /var/lib/docker
             - name: run
               mountPath: /run
             - name: modules
@@ -136,8 +132,8 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /etc/buildkit
-            - name: workdir
-              mountPath: /var/lib
+            - name: workdir-buildkit
+              mountPath: /var/lib/buildkit
             - name: run
               mountPath: /run
           resources:
@@ -157,10 +153,6 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
-        - name: home
-          emptyDir: {}
-        - name: builds
-          emptyDir: {}
         - name: run
           emptyDir:
             medium: Memory
@@ -187,17 +179,91 @@ spec:
           hostPath:
             path: /lib/modules
       {{- end }}
+  {{- if not .Values.docker.persistence.enabled }}
+        - name: workdir-docker
+          emptyDir: {}
+  {{- else if and .Values.docker.persistence.enabled .Values.docker.persistence.existingClaim }}
+        - name: workdir-docker
+          persistentVolumeClaim:
+            claimName: {{ .Values.docker.persistence.existingClaim }}
+  {{- else }}
+        - name: workdir-docker
+          ephemeral:
+            volumeClaimTemplate:
+              metadata:
+                labels:
+                  {{- include "github-actions.selectorLabels" . | nindent 18 }}
+                  app.kubernetes.io/component: ghactions
+                {{- with .Values.docker.persistence.annotations }}
+                annotations:
+                {{- range $key, $value := . }}
+                  {{ $key }}: {{ $value }}
+                {{- end }}
+                {{- end }}
+              spec:
+                accessModes:
+                {{- range .Values.docker.persistence.accessModes }}
+                  - {{ . | quote }}
+                {{- end }}
+                resources:
+                  requests:
+                    storage: {{ .Values.docker.persistence.size | quote }}
+              {{- if .Values.docker.persistence.storageClass }}
+              {{- if (eq "-" .Values.docker.persistence.storageClass) }}
+                storageClassName: ""
+              {{- else }}
+                storageClassName: "{{ .Values.docker.persistence.storageClass }}"
+              {{- end }}
+              {{- end }}
+  {{- end }}
+  {{- if not .Values.buildkit.persistence.enabled }}
+        - name: workdir-buildkit
+          emptyDir: {}
+  {{- else if and .Values.buildkit.persistence.enabled .Values.buildkit.persistence.existingClaim }}
+        - name: workdir-buildkit
+          persistentVolumeClaim:
+            claimName: {{ .Values.buildkit.persistence.existingClaim }}
+  {{- else }}
+        - name: workdir-buildkit
+          ephemeral:
+            volumeClaimTemplate:
+              metadata:
+                labels:
+                  {{- include "github-actions.selectorLabels" . | nindent 18 }}
+                  app.kubernetes.io/component: ghactions
+                {{- with .Values.buildkit.persistence.annotations }}
+                annotations:
+                {{- range $key, $value := . }}
+                  {{ $key }}: {{ $value }}
+                {{- end }}
+                {{- end }}
+              spec:
+                accessModes:
+                {{- range .Values.buildkit.persistence.accessModes }}
+                  - {{ . | quote }}
+                {{- end }}
+                resources:
+                  requests:
+                    storage: {{ .Values.buildkit.persistence.size | quote }}
+              {{- if .Values.buildkit.persistence.storageClass }}
+              {{- if (eq "-" .Values.buildkit.persistence.storageClass) }}
+                storageClassName: ""
+              {{- else }}
+                storageClassName: "{{ .Values.buildkit.persistence.storageClass }}"
+              {{- end }}
+              {{- end }}
+  {{- end }}
   {{- if not .Values.persistence.enabled }}
-        - name: workdir
+        - name: builds
           emptyDir: {}
   {{- else if and .Values.persistence.enabled .Values.persistence.existingClaim }}
-        - name: workdir
+        - name: builds
           persistentVolumeClaim:
             claimName: {{ .Values.persistence.existingClaim }}
   {{- else }}
   volumeClaimTemplates:
     - metadata:
-        name: workdir
+        name: builds
       {{- with .Values.persistence.annotations }}
         annotations:
         {{- range $key, $value := . }}

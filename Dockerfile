@@ -75,7 +75,8 @@ RUN apt-get update && apt-get install -y docker.io && \
     mv /tmp/reviewdog /usr/bin/reviewdog && \
     rm -rf /tmp/*
 
-COPY --from=docker/buildx-bin:0.10.0 /buildx /usr/libexec/docker/cli-plugins/docker-buildx
+COPY --from=docker:20.10-cli /usr/libexec/docker/cli-plugins/docker-compose /usr/libexec/docker/cli-plugins/docker-compose
+COPY --from=docker/buildx-bin:0.10.1 /buildx /usr/libexec/docker/cli-plugins/docker-buildx
 COPY --from=aquasec/trivy:0.36.1 /usr/local/bin/trivy /usr/local/bin/trivy
 
 ARG HELM_VERSION=3.10.2 NERDCTL_VERSION=1.0.0

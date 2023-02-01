@@ -80,8 +80,8 @@ spec:
             - name: buildkit-{{ .name }}
               mountPath: {{ .mountPath }}
           {{- end }}
-            - name: workdir
-              mountPath: /var/lib
+            - name: workdir-buildkit
+              mountPath: /var/lib/buildkit
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- end }}
@@ -124,8 +124,8 @@ spec:
             - name: docker-{{ .name }}
               mountPath: {{ .mountPath }}
           {{- end }}
-            - name: workdir
-              mountPath: /var/lib
+            - name: workdir-docker
+              mountPath: /var/lib/docker
             - name: modules
               mountPath: /lib/modules
               readOnly: true
@@ -224,36 +224,77 @@ spec:
           {{- end }}
         {{- end }}
       {{- end }}
-  {{- if not .Values.persistence.enabled }}
-        - name: workdir
+  {{- if not .Values.buildkit.persistence.enabled }}
+        - name: workdir-buildkit
           emptyDir: {}
-  {{- else if and .Values.persistence.enabled .Values.persistence.existingClaim }}
-        - name: workdir
+  {{- else if and .Values.buildkit.persistence.enabled .Values.buildkit.persistence.existingClaim }}
+        - name: workdir-buildkit
           persistentVolumeClaim:
-            claimName: {{ .Values.persistence.existingClaim }}
+            claimName: {{ .Values.buildkit.persistence.existingClaim }}
   {{- else }}
-  volumeClaimTemplates:
-    - metadata:
-        name: workdir
-      {{- with .Values.persistence.annotations }}
-        annotations:
-        {{- range $key, $value := . }}
-          {{ $key }}: {{ $value }}
-        {{- end }}
-      {{- end }}
-      spec:
-        accessModes:
-        {{- range .Values.persistence.accessModes }}
-          - {{ . | quote }}
-        {{- end }}
-        resources:
-          requests:
-            storage: {{ .Values.persistence.size | quote }}
-      {{- if .Values.persistence.storageClass }}
-      {{- if (eq "-" .Values.persistence.storageClass) }}
-        storageClassName: ""
-      {{- else }}
-        storageClassName: "{{ .Values.persistence.storageClass }}"
-      {{- end }}
-      {{- end }}
+        - name: workdir-buildkit
+          ephemeral:
+            volumeClaimTemplate:
+              metadata:
+                labels:
+                  {{- include "build-machine.selectorLabels" . | nindent 18 }}
+                  app.kubernetes.io/component: ghactions
+                {{- with .Values.buildkit.persistence.annotations }}
+                annotations:
+                {{- range $key, $value := . }}
+                  {{ $key }}: {{ $value }}
+                {{- end }}
+                {{- end }}
+              spec:
+                accessModes:
+                {{- range .Values.buildkit.persistence.accessModes }}
+                  - {{ . | quote }}
+                {{- end }}
+                resources:
+                  requests:
+                    storage: {{ .Values.buildkit.persistence.size | quote }}
+              {{- if .Values.buildkit.persistence.storageClass }}
+              {{- if (eq "-" .Values.buildkit.persistence.storageClass) }}
+                storageClassName: ""
+              {{- else }}
+                storageClassName: "{{ .Values.buildkit.persistence.storageClass }}"
+              {{- end }}
+              {{- end }}
+  {{- end }}
+  {{- if not .Values.docker.persistence.enabled }}
+        - name: workdir-docker
+          emptyDir: {}
+  {{- else if and .Values.docker.persistence.enabled .Values.docker.persistence.existingClaim }}
+        - name: workdir-docker
+          persistentVolumeClaim:
+            claimName: {{ .Values.docker.persistence.existingClaim }}
+  {{- else }}
+        - name: workdir-docker
+          ephemeral:
+            volumeClaimTemplate:
+              metadata:
+                labels:
+                  {{- include "build-machine.selectorLabels" . | nindent 18 }}
+                  app.kubernetes.io/component: ghactions
+                {{- with .Values.docker.persistence.annotations }}
+                annotations:
+                {{- range $key, $value := . }}
+                  {{ $key }}: {{ $value }}
+                {{- end }}
+                {{- end }}
+              spec:
+                accessModes:
+                {{- range .Values.docker.persistence.accessModes }}
+                  - {{ . | quote }}
+                {{- end }}
+                resources:
+                  requests:
+                    storage: {{ .Values.docker.persistence.size | quote }}
+              {{- if .Values.docker.persistence.storageClass }}
+              {{- if (eq "-" .Values.docker.persistence.storageClass) }}
+                storageClassName: ""
+              {{- else }}
+                storageClassName: "{{ .Values.docker.persistence.storageClass }}"
+              {{- end }}
+              {{- end }}
   {{- end }}
