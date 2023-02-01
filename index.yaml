@@ -3,6 +3,24 @@ entries:
   build-machine:
   - apiVersion: v2
     appVersion: release_v2.301.1
+    created: "2023-02-01T17:24:46.796249226Z"
+    description: Container build machine for Kubernetes
+    digest: 89ae56f52d1418c7c2f766a709c94a9a836a1ecfab48c44b4c4685e136347ab6
+    home: https://github.com/sergelogvinov/github-actions-runner
+    keywords:
+    - docker
+    - buildkit
+    - devops
+    - automation
+    name: build-machine
+    sources:
+    - https://github.com/sergelogvinov/github-actions-runner
+    type: application
+    urls:
+    - https://github.com/sergelogvinov/github-actions-runner/releases/download/build-machine-0.4.0/build-machine-0.4.0.tgz
+    version: 0.4.0
+  - apiVersion: v2
+    appVersion: release_v2.301.1
     created: "2023-01-27T17:26:11.24556878Z"
     description: Container build machine for Kubernetes
     digest: 39283bced75f95f8abcf31731add63f321fe029630cea545f7ba892e8f7c5628
@@ -164,6 +182,26 @@ entries:
     - https://github.com/sergelogvinov/github-actions-runner/releases/download/build-machine-0.1.0/build-machine-0.1.0.tgz
     version: 0.1.0
   github-actions:
+  - apiVersion: v2
+    appVersion: release_v2.301.1
+    created: "2023-02-01T17:24:46.931357222Z"
+    description: Github Action Runner on Kubernetes
+    digest: c23921405636f80eff6c45cf16ae44ffdbe4ef818ea75ae9556c2ce743310e55
+    home: https://github.com/features/actions
+    keywords:
+    - ci
+    - continuous integration
+    - continuous delivery
+    - continuous deployment
+    - devops
+    - automation
+    name: github-actions
+    sources:
+    - https://github.com/sergelogvinov/github-actions-runner
+    type: application
+    urls:
+    - https://github.com/sergelogvinov/github-actions-runner/releases/download/github-actions-0.11.0/github-actions-0.11.0.tgz
+    version: 0.11.0
   - apiVersion: v2
     appVersion: release_v2.301.1
     created: "2023-01-29T19:10:36.174195042Z"
@@ -664,4 +702,4 @@ entries:
     urls:
     - https://github.com/sergelogvinov/github-actions-runner/releases/download/github-actions-0.1.0/github-actions-0.1.0.tgz
     version: 0.1.0
-generated: "2023-01-29T19:10:36.174404245Z"
+generated: "2023-02-01T17:24:46.932025272Z"
