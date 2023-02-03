@@ -98,3 +98,26 @@ Return a podAffinity/podAntiAffinity definition
     {{- include "affinities.pods.hard" . -}}
   {{- end -}}
 {{- end -}}
+
+{{/*
+Renders a volumeClaimTemplate.
+Usage:
+{{ include "volumeClaimTemplate.render" .Values.persistence }}
+*/}}
+{{- define "volumeClaimTemplate.spec.render" -}}
+spec:
+  accessModes:
+  {{- range .accessModes }}
+    - {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .size | quote }}
+{{- if .storageClass }}
+{{- if (eq "-" .storageClass) }}
+  storageClassName: ""
+{{- else }}
+  storageClassName: "{{ .storageClass }}"
+{{- end }}
+{{- end }}
+{{- end -}}

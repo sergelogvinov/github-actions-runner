@@ -5,7 +5,8 @@ WORKDIR /go/src/github.com/immortal/immortal
 RUN git clone --single-branch --branch 0.24.3 --depth 1 https://github.com/immortal/immortal.git .
 RUN make build-linux
 
-#
+###
+
 FROM alpine:3.17 AS docker-host
 LABEL org.opencontainers.image.source https://github.com/sergelogvinov/github-actions-runner
 
@@ -20,7 +21,16 @@ ENV DOCKER_HOST=tcp://127.0.0.1:2376
 VOLUME ["/var/lib/docker"]
 ENTRYPOINT ["/usr/bin/dockerd","-H","tcp://0.0.0.0:2376"]
 
-#
+###
+
+FROM golang:1.18-bullseye AS helm
+
+WORKDIR /go/src/
+RUN git clone --single-branch --depth 2 --branch hooks-logs https://github.com/sergelogvinov/helm.git .
+RUN make
+
+###
+
 FROM debian:bullseye-slim AS containerd-host
 LABEL org.opencontainers.image.source https://github.com/sergelogvinov/github-actions-runner
 
@@ -50,7 +60,8 @@ ENV IMMORTAL_EXIT=1
 VOLUME ["/var/lib"]
 ENTRYPOINT ["/usr/sbin/immortaldir","/etc/immortal"]
 
-#
+###
+
 FROM debian:11-slim AS github-actions-runner
 LABEL org.opencontainers.image.source https://github.com/sergelogvinov/github-actions-runner
 
@@ -76,21 +87,24 @@ RUN apt-get update && apt-get install -y docker.io && \
     rm -rf /tmp/*
 
 COPY --from=docker:20.10-cli /usr/libexec/docker/cli-plugins/docker-compose /usr/libexec/docker/cli-plugins/docker-compose
-COPY --from=docker/buildx-bin:0.10.1 /buildx /usr/libexec/docker/cli-plugins/docker-buildx
-COPY --from=aquasec/trivy:0.36.1 /usr/local/bin/trivy /usr/local/bin/trivy
+COPY --from=docker/buildx-bin:0.10.2 /buildx /usr/libexec/docker/cli-plugins/docker-buildx
+COPY --from=aquasec/trivy:0.37.1 /usr/local/bin/trivy /usr/local/bin/trivy
 
-ARG HELM_VERSION=3.10.2 NERDCTL_VERSION=1.0.0
+ARG HELM_VERSION=3.11.0 NERDCTL_VERSION=1.2.0
 RUN wget https://dl.k8s.io/v1.23.3/kubernetes-client-linux-amd64.tar.gz -O /tmp/kubernetes-client-linux-amd64.tar.gz && \
     cd /tmp && tar -xzf /tmp/kubernetes-client-linux-amd64.tar.gz && mv kubernetes/client/bin/kubectl /usr/bin/kubectl && \
     wget https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz -O /tmp/helm.tar.gz && \
-    echo "2315941a13291c277dac9f65e75ead56386440d3907e0540bf157ae70f188347 /tmp/helm.tar.gz" | sha256sum -c - && \
+    echo "6c3440d829a56071a4386dd3ce6254eab113bc9b1fe924a6ee99f7ff869b9e0b /tmp/helm.tar.gz" | sha256sum -c - && \
     cd /tmp && tar -xzf /tmp/helm.tar.gz && mv linux-amd64/helm /usr/bin/helm && rm -rf /tmp/* && \
     wget https://github.com/containerd/nerdctl/releases/download/v${NERDCTL_VERSION}/nerdctl-${NERDCTL_VERSION}-linux-amd64.tar.gz -O /tmp/nerdctl.tar.gz && \
-    echo "3e993d714e6b88d1803a58d9ff5a00d121f0544c35efed3a3789e19d6ab36964 /tmp/nerdctl.tar.gz" | sha256sum -c - && \
+    echo "9d6f3427a1c0af0c38a0a707751b424d04cca13b82c62ad03ec3f4799c2de48c /tmp/nerdctl.tar.gz" | sha256sum -c - && \
     cd /tmp && tar -xzf /tmp/nerdctl.tar.gz && mv nerdctl /usr/bin/nerdctl && rm -rf /tmp/* && \
-    wget https://github.com/mozilla/sops/releases/download/v3.7.1/sops-v3.7.1.linux -O /tmp/sops && \
-    echo "6d4a087b325525f160c9a68fd2fd2df8 /tmp/sops" | md5sum -c - && \
+    wget https://github.com/mozilla/sops/releases/download/v3.7.3/sops-v3.7.3.linux -O /tmp/sops && \
+    echo "913515e57d0112840540dc3c56370ff9 /tmp/sops" | md5sum -c - && \
     install -o root -g root /tmp/sops /usr/bin/sops && rm -rf /tmp/*
+
+# helm hooks error log https://github.com/helm/helm/pull/11228
+COPY --from=helm --chown=root:root /go/src/bin/helm /usr/bin/helm
 
 COPY --from=amazon/aws-cli:2.9.18 /usr/local/aws-cli /usr/local/aws-cli
 RUN ln -s /usr/local/aws-cli/v2/current/bin/aws /usr/local/bin/aws

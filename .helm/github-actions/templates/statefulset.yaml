@@ -186,7 +186,7 @@ spec:
         - name: workdir-docker
           persistentVolumeClaim:
             claimName: {{ .Values.docker.persistence.existingClaim }}
-  {{- else }}
+  {{- else if .Values.docker.persistence.ephemeral }}
         - name: workdir-docker
           ephemeral:
             volumeClaimTemplate:
@@ -200,21 +200,7 @@ spec:
                   {{ $key }}: {{ $value }}
                 {{- end }}
                 {{- end }}
-              spec:
-                accessModes:
-                {{- range .Values.docker.persistence.accessModes }}
-                  - {{ . | quote }}
-                {{- end }}
-                resources:
-                  requests:
-                    storage: {{ .Values.docker.persistence.size | quote }}
-              {{- if .Values.docker.persistence.storageClass }}
-              {{- if (eq "-" .Values.docker.persistence.storageClass) }}
-                storageClassName: ""
-              {{- else }}
-                storageClassName: "{{ .Values.docker.persistence.storageClass }}"
-              {{- end }}
-              {{- end }}
+              {{- include "volumeClaimTemplate.spec.render" .Values.docker.persistence | nindent 14 }}
   {{- end }}
   {{- if not .Values.buildkit.persistence.enabled }}
         - name: workdir-buildkit
@@ -223,7 +209,7 @@ spec:
         - name: workdir-buildkit
           persistentVolumeClaim:
             claimName: {{ .Values.buildkit.persistence.existingClaim }}
-  {{- else }}
+  {{- else if .Values.buildkit.persistence.ephemeral }}
         - name: workdir-buildkit
           ephemeral:
             volumeClaimTemplate:
@@ -231,27 +217,13 @@ spec:
                 labels:
                   {{- include "github-actions.selectorLabels" . | nindent 18 }}
                   app.kubernetes.io/component: ghactions
-                {{- with .Values.buildkit.persistence.annotations }}
+                {{- with .Values.docker.persistence.annotations }}
                 annotations:
                 {{- range $key, $value := . }}
                   {{ $key }}: {{ $value }}
                 {{- end }}
                 {{- end }}
-              spec:
-                accessModes:
-                {{- range .Values.buildkit.persistence.accessModes }}
-                  - {{ . | quote }}
-                {{- end }}
-                resources:
-                  requests:
-                    storage: {{ .Values.buildkit.persistence.size | quote }}
-              {{- if .Values.buildkit.persistence.storageClass }}
-              {{- if (eq "-" .Values.buildkit.persistence.storageClass) }}
-                storageClassName: ""
-              {{- else }}
-                storageClassName: "{{ .Values.buildkit.persistence.storageClass }}"
-              {{- end }}
-              {{- end }}
+              {{- include "volumeClaimTemplate.spec.render" .Values.buildkit.persistence | nindent 14 }}
   {{- end }}
   {{- if not .Values.persistence.enabled }}
         - name: builds
@@ -264,6 +236,9 @@ spec:
   volumeClaimTemplates:
     - metadata:
         name: builds
+        labels:
+          {{- include "github-actions.selectorLabels" . | nindent 10 }}
+          app.kubernetes.io/component: ghactions
       {{- with .Values.persistence.annotations }}
         annotations:
         {{- range $key, $value := . }}
@@ -285,4 +260,32 @@ spec:
         storageClassName: "{{ .Values.persistence.storageClass }}"
       {{- end }}
       {{- end }}
+  {{- if not .Values.docker.persistence.ephemeral }}
+    - metadata:
+        name: workdir-docker
+        labels:
+          {{- include "github-actions.selectorLabels" . | nindent 10 }}
+          app.kubernetes.io/component: ghactions
+      {{- with .Values.docker.persistence.annotations }}
+        annotations:
+        {{- range $key, $value := . }}
+          {{ $key }}: {{ $value }}
+        {{- end }}
+      {{- end }}
+        {{- include "volumeClaimTemplate.spec.render" .Values.docker.persistence | nindent 6 }}
+  {{- end }}
+  {{- if not .Values.buildkit.persistence.ephemeral }}
+    - metadata:
+        name: workdir-buildkit
+        labels:
+          {{- include "github-actions.selectorLabels" . | nindent 10 }}
+          app.kubernetes.io/component: ghactions
+      {{- with .Values.buildkit.persistence.annotations }}
+        annotations:
+        {{- range $key, $value := . }}
+          {{ $key }}: {{ $value }}
+        {{- end }}
+      {{- end }}
+        {{- include "volumeClaimTemplate.spec.render" .Values.buildkit.persistence | nindent 6 }}
+  {{- end }}
   {{- end }}
