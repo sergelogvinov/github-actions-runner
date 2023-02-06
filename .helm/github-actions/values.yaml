@@ -141,6 +141,41 @@ buildkit:
     size: 100Gi
     annotations: {}
 
+registry:
+  enabled: false
+  name: cache.local
+
+  image:
+    repository: registry
+    pullPolicy: IfNotPresent
+    tag: 2.8
+
+  resources:
+    # limits:
+    #   cpu: 1
+    #   memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 32Mi
+
+  extraVolumeMounts: []
+  extraVolumes: []
+
+  persistence:
+    enabled: false
+    ## A manually managed Persistent Volume and Claim
+    ## If defined, PVC must be created manually before volume will be bound
+    # existingClaim:
+    # storageClass: "-"
+    accessModes:
+      - ReadWriteOnce
+    size: 100Gi
+    annotations: {}
+
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
 initScript: ~
   # #!/bin/sh
   # docker buildx create --name builder --driver remote tcp://build-machine:1234 --driver-opt cacert=/.certs/ca.pem,cert=/.certs/cert.pem,key=/.certs/key.pem --use
@@ -162,6 +197,14 @@ metrics:
     readOnlyRootFilesystem: true
     capabilities:
       drop: ["ALL"]
+
+  resources:
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
 
   envs:
     EXPORT_FIELDS: repo,head_branch,workflow,event,status

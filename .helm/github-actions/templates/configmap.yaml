@@ -19,6 +19,28 @@ data:
 
     default: * -> status(404) -> <shunt>;
 
+  registry.yaml: |-
+    version: 0.1
+    log:
+      accesslog:
+        disabled: true
+      level: warn
+      formatter: json
+    storage:
+      cache:
+        blobdescriptor: inmemory
+      maintenance:
+        uploadpurging:
+          enabled: true
+          age: 168h
+          interval: 24h
+          dryrun: false
+      filesystem:
+        rootdirectory: /var/lib/registry
+        maxthreads: 100
+    http:
+      addr: :8080
+
   buildkitd.toml: |-
     root = "/var/lib/buildkit"
 
@@ -42,13 +64,19 @@ data:
       all = true
       keepBytes = 1024000000
 
-    {{- range $inx, $val := .Values.docker.mirrors }}
+    {{ range $inx, $val := .Values.docker.mirrors }}
     [registry."{{ $val.host }}"]
       mirrors = ["{{ include "github-actions.fullname" $ }}-mirrors/{{ $val.host | replace "." "-" }}"]
     {{- end }}
     {{- range $inx, $val := .Values.docker.mirrors }}
     [registry."{{ include "github-actions.fullname" $ }}-mirrors/{{ $val.host | replace "." "-" }}"]
       http = true
+    {{- end }}
+    {{- if .Values.registry.enabled }}
+    [registry."{{ include "github-actions.fullname" . }}-registry"]
+      http = true
+    [registry."{{ .Values.registry.name }}"]
+      endpoint = ["http://{{ include "github-actions.fullname" $ }}-registry"]
     {{- end }}
 
   daemon.json: |-
@@ -57,6 +85,9 @@ data:
         "buildkit" : true
       },
       "mtu": 1300,
+      {{- if .Values.registry.enabled }}
+      "insecure-registries": ["{{ include "github-actions.fullname" . }}-registry.{{ .Release.Namespace }}.svc","{{ .Values.registry.name }}"],
+      {{- end }}
       "log-level": "warn"
     }
 

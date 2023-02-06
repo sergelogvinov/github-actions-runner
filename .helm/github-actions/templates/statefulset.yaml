@@ -56,6 +56,10 @@ spec:
             - name: run
               mountPath: /run
         {{- end }}
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "3"
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -217,7 +221,7 @@ spec:
                 labels:
                   {{- include "github-actions.selectorLabels" . | nindent 18 }}
                   app.kubernetes.io/component: ghactions
-                {{- with .Values.docker.persistence.annotations }}
+                {{- with .Values.buildkit.persistence.annotations }}
                 annotations:
                 {{- range $key, $value := . }}
                   {{ $key }}: {{ $value }}
