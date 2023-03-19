@@ -6,6 +6,8 @@ metadata:
   labels:
     {{- include "github-actions.labels" . | nindent 4 }}
     app.kubernetes.io/component: mirrors
+  annotations:
+    service.kubernetes.io/topology-aware-hints: auto
 spec:
   type: ClusterIP
   ports:
