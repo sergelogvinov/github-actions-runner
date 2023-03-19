@@ -66,9 +66,9 @@ autoscaling:
 docker:
   enabled: false
   image:
-    repository: ghcr.io/sergelogvinov/github-actions-runner/docker
+    repository: docker
     pullPolicy: IfNotPresent
-    # tag:
+    tag: 23.0-dind
 
   mirrors:
     - host: docker.io
@@ -178,7 +178,7 @@ registry:
 
 initScript: ~
   # #!/bin/sh
-  # docker buildx create --name builder --driver remote tcp://build-machine:1234 --driver-opt cacert=/.certs/ca.pem,cert=/.certs/cert.pem,key=/.certs/key.pem --use
+  # docker buildx create --name builder --driver remote tcp://build-machine:1234 --buildkitd-flags="" --driver-opt cacert=/.certs/ca.pem,cert=/.certs/cert.pem,key=/.certs/key.pem --use
 
 metrics:
   enabled: false

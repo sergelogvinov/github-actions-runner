@@ -84,6 +84,13 @@ data:
       "features": {
         "buildkit" : true
       },
+      "builder": {
+        "gc": {
+          "defaultKeepStorage": "32GB",
+          "enabled": true
+        }
+      },
+      "hosts": ["unix:///var/run/docker.sock","tcp://127.0.0.1:2376"],
       "mtu": 1300,
       {{- if .Values.registry.enabled }}
       "insecure-registries": ["{{ include "github-actions.fullname" . }}-registry.{{ .Release.Namespace }}.svc","{{ .Values.registry.name }}"],
@@ -91,7 +98,12 @@ data:
       "log-level": "warn"
     }
 
-{{- if .Values.initScript }}
+  mirrors.sh: |
+    #!/bin/sh
+    until docker ps; do sleep 1; done
+    docker buildx create --name multiarch --driver docker-container --config /etc/docker-config/buildkitd.toml --use
+
+  {{- if .Values.initScript }}
   initScript.sh: |
     {{ .Values.initScript | nindent 4 }}
-{{- end }}
+  {{- end }}

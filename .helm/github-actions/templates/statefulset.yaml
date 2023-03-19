@@ -35,7 +35,7 @@ spec:
       serviceAccountName: {{ include "github-actions.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      terminationGracePeriodSeconds: 60
+      terminationGracePeriodSeconds: 120
       initContainers:
         {{- if .Values.initScript }}
         - name: {{ .Chart.Name }}-init
@@ -56,42 +56,29 @@ spec:
             - name: run
               mountPath: /run
         {{- end }}
+        # - name: arch
+        #   image: tonistiigi/binfmt:qemu-v6.2.0
+        #   args:
+        #     - --install
+        #     - arm64
+        #   securityContext:
+        #     procMount: Unmasked
+        #     privileged: true
       dnsConfig:
         options:
           - name: ndots
             value: "3"
       containers:
-        - name: {{ .Chart.Name }}
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          # command: ["sleep","60000"]
-          env:
-            - name: RUNNER_WORK_FOLDER
-              value: /builds
-          envFrom:
-            - secretRef:
-                name: "{{ include "github-actions.fullname" . }}"
-          volumeMounts:
-          {{- if .Values.extraVolumeMounts }}
-            {{ toYaml .Values.extraVolumeMounts | nindent 12 }}
-          {{- end }}
-            - name: builds
-              mountPath: /builds
-            - name: run
-              mountPath: /run
-          resources:
-            {{- toYaml .Values.resources | nindent 12 }}
-      {{- if .Values.docker.enabled }}
+        {{- if .Values.docker.enabled }}
         - name: {{ .Chart.Name }}-docker
+          minReadySeconds: 5
           securityContext:
             privileged: true
             seccompProfile:
               type: Unconfined
           image: "{{ .Values.docker.image.repository }}:{{ .Values.docker.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.docker.image.pullPolicy }}
-          command: ["/usr/bin/dockerd","-H","tcp://127.0.0.1:2376"]
+          command: ["dockerd"]
           args:
             - --config-file=/etc/docker-config/daemon.json
           {{- if .Values.docker.mirrors }}
@@ -112,9 +99,10 @@ spec:
               readOnly: true
           resources:
             {{- toYaml .Values.docker.resources | nindent 12 }}
-      {{- end }}
-      {{- if .Values.buildkit.enabled }}
+        {{- end }}
+        {{- if .Values.buildkit.enabled }}
         - name: {{ .Chart.Name }}-buildkit
+          minReadySeconds: 5
           securityContext:
             privileged: true
             seccompProfile:
@@ -142,7 +130,35 @@ spec:
               mountPath: /run
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-      {{- end }}
+        {{- end }}
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          # command: ["sleep","60000"]
+          env:
+            - name: RUNNER_WORK_FOLDER
+              value: /builds
+          envFrom:
+            - secretRef:
+                name: "{{ include "github-actions.fullname" . }}"
+          lifecycle:
+            postStart:
+              exec:
+                command: ["/bin/sh", "/etc/docker-config/mirrors.sh"]
+          volumeMounts:
+            - name: config
+              mountPath: /etc/docker-config
+          {{- if .Values.extraVolumeMounts }}
+            {{ toYaml .Values.extraVolumeMounts | nindent 12 }}
+          {{- end }}
+            - name: builds
+              mountPath: /builds
+            - name: run
+              mountPath: /run
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -183,7 +199,7 @@ spec:
           hostPath:
             path: /lib/modules
       {{- end }}
-  {{- if not .Values.docker.persistence.enabled }}
+  {{- if .Values.docker.enabled }}{{- if not .Values.docker.persistence.enabled }}
         - name: workdir-docker
           emptyDir: {}
   {{- else if and .Values.docker.persistence.enabled .Values.docker.persistence.existingClaim }}
@@ -205,8 +221,8 @@ spec:
                 {{- end }}
                 {{- end }}
               {{- include "volumeClaimTemplate.spec.render" .Values.docker.persistence | nindent 14 }}
-  {{- end }}
-  {{- if not .Values.buildkit.persistence.enabled }}
+  {{- end }}{{- end }}
+  {{- if .Values.buildkit.enabled }}{{- if not .Values.buildkit.persistence.enabled }}
         - name: workdir-buildkit
           emptyDir: {}
   {{- else if and .Values.buildkit.persistence.enabled .Values.buildkit.persistence.existingClaim }}
@@ -228,7 +244,7 @@ spec:
                 {{- end }}
                 {{- end }}
               {{- include "volumeClaimTemplate.spec.render" .Values.buildkit.persistence | nindent 14 }}
-  {{- end }}
+  {{- end }}{{- end }}
   {{- if not .Values.persistence.enabled }}
         - name: builds
           emptyDir: {}
@@ -264,7 +280,7 @@ spec:
         storageClassName: "{{ .Values.persistence.storageClass }}"
       {{- end }}
       {{- end }}
-  {{- if not .Values.docker.persistence.ephemeral }}
+  {{- if and .Values.docker.enabled (not .Values.docker.persistence.ephemeral) }}
     - metadata:
         name: workdir-docker
         labels:
@@ -278,7 +294,7 @@ spec:
       {{- end }}
         {{- include "volumeClaimTemplate.spec.render" .Values.docker.persistence | nindent 6 }}
   {{- end }}
-  {{- if not .Values.buildkit.persistence.ephemeral }}
+  {{- if and .Values.buildkit.enabled (not .Values.buildkit.persistence.ephemeral) }}
     - metadata:
         name: workdir-buildkit
         labels:
