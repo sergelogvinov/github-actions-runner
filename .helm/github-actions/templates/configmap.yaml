@@ -5,6 +5,17 @@ metadata:
   labels:
     {{- include "github-actions.labels" . | nindent 4 }}
 data:
+  {{- $ca := genCA (include "github-actions.fullname" .) 3650 }}
+  {{- $host := printf "%s-mirrors" (include "github-actions.fullname" .) }}
+  {{- $domain := printf "%s-mirrors.%s.svc" (include "github-actions.fullname" .) .Release.Namespace }}
+  {{- $server := genSignedCert $host nil (list $host $domain) 3650 $ca }}
+  ca.crt: |
+    {{- $ca.Cert | nindent 4 }}
+  tls.crt: |
+    {{- $server.Cert | nindent 4 }}
+  tls.key: |
+    {{- $server.Key | nindent 4 }}
+
   mirrors.eskip: |-
     healthz: Path("/healthz") -> inlineContent("ok")
         -> disableAccessLog() -> <shunt>;
@@ -15,7 +26,7 @@ data:
     {{- end }}
 
     docker: PathSubtree("/v2/")
-        -> "http://127.0.0.1:5000";
+        -> enableAccessLog(5) -> "http://127.0.0.1:5000";
 
     default: * -> status(404) -> <shunt>;
 
@@ -43,6 +54,7 @@ data:
 
   buildkitd.toml: |-
     root = "/var/lib/buildkit"
+    debug = false
 
     [grpc]
     address = [ "unix:///run/buildkit/buildkitd.sock", "tcp://0.0.0.0:1234" ]
@@ -66,12 +78,16 @@ data:
 
     {{ range $inx, $val := .Values.docker.mirrors }}
     [registry."{{ $val.host }}"]
-      mirrors = ["{{ include "github-actions.fullname" $ }}-mirrors/{{ $val.host | replace "." "-" }}"]
+      capabilities = ["pull", "resolve"]
+      mirrors = ["{{ include "github-actions.fullname" $ }}-mirrors.{{ $.Release.Namespace }}.svc/{{ $val.host | replace "." "-" }}"]
+      http = true
+      insecure = true
     {{- end }}
     {{- range $inx, $val := .Values.docker.mirrors }}
-    [registry."{{ include "github-actions.fullname" $ }}-mirrors/{{ $val.host | replace "." "-" }}"]
+    [registry."{{ include "github-actions.fullname" $ }}-mirrors.{{ $.Release.Namespace }}.svc/{{ $val.host | replace "." "-" }}"]
       http = true
     {{- end }}
+
     {{- if .Values.registry.enabled }}
     [registry."{{ include "github-actions.fullname" . }}-registry"]
       http = true
@@ -92,9 +108,13 @@ data:
       },
       "hosts": ["unix:///var/run/docker.sock","tcp://127.0.0.1:2376"],
       "mtu": 1300,
-      {{- if .Values.registry.enabled }}
-      "insecure-registries": ["{{ include "github-actions.fullname" . }}-registry.{{ .Release.Namespace }}.svc","{{ .Values.registry.name }}"],
+      {{- if .Values.docker.mirrors }}
+      "registry-mirrors": ["http://{{ include "github-actions.fullname" $ }}-mirrors.{{ $.Release.Namespace }}.svc"],
       {{- end }}
+      "insecure-registries": [
+        "{{ include "github-actions.fullname" $ }}-mirrors.{{ $.Release.Namespace }}.svc",
+        "{{ include "github-actions.fullname" . }}-registry.{{ .Release.Namespace }}.svc","{{ .Values.registry.name }}"
+      ],
       "log-level": "warn"
     }
 
