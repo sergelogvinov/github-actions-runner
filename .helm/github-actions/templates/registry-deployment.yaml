@@ -46,8 +46,6 @@ spec:
           ports:
             - name: http
               containerPort: 8080
-            - name: https
-              containerPort: 8443
           startupProbe:
             httpGet:
               path: /
@@ -69,6 +67,47 @@ spec:
           {{- if .Values.registry.extraVolumeMounts }}
             {{ toYaml .Values.registry.extraVolumeMounts | nindent 12 }}
           {{- end }}
+        - name: {{ include "github-actions.fullname" . }}-registry-tls
+          securityContext:
+            allowPrivilegeEscalation: false
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop: ["ALL"]
+          image: registry.opensource.zalan.do/teapot/skipper:v0.16.1
+          command: ['skipper']
+          args:
+            - -address=:8443
+            - -tls-cert=/etc/skipper/registry.crt
+            - -tls-key=/etc/skipper/registry.key
+            - -routes-file=/etc/skipper/registry.eskip
+            - -access-log-json-enabled
+            - -application-log-level=WARN
+            - -timeout-backend=5s
+            - -read-timeout-server=30s
+            - -write-timeout-server=30s
+          ports:
+            - name: https
+              containerPort: 8443
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: https
+              scheme: HTTPS
+              httpHeaders:
+                - name: Host
+                  value: 127.0.0.1
+            initialDelaySeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 30
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
+          volumeMounts:
+            - name: config
+              mountPath: /etc/skipper
       {{- with .Values.registry.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -88,6 +127,12 @@ spec:
             items:
               - key: registry.yaml
                 path: config.yaml
+              - key: registry.eskip
+                path: registry.eskip
+              - key: registry.crt
+                path: registry.crt
+              - key: registry.key
+                path: registry.key
       {{- if not .Values.registry.persistence.enabled }}
         - name: cache
           emptyDir: {}

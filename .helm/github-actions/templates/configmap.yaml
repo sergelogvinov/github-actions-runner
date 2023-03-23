@@ -9,12 +9,18 @@ data:
   {{- $host := printf "%s-mirrors" (include "github-actions.fullname" .) }}
   {{- $domain := printf "%s-mirrors.%s.svc" (include "github-actions.fullname" .) .Release.Namespace }}
   {{- $server := genSignedCert $host nil (list $host $domain) 3650 $ca }}
+  {{- $domainReg := printf "%s-registry.%s.svc" (include "github-actions.fullname" .) .Release.Namespace }}
+  {{- $registry := genSignedCert $host nil (list $domainReg) 3650 $ca }}
   ca.crt: |
     {{- $ca.Cert | nindent 4 }}
   tls.crt: |
     {{- $server.Cert | nindent 4 }}
   tls.key: |
     {{- $server.Key | nindent 4 }}
+  registry.crt: |
+    {{- $registry.Cert | nindent 4 }}
+  registry.key: |
+    {{- $registry.Key | nindent 4 }}
 
   mirrors.eskip: |-
     healthz: Path("/healthz") -> inlineContent("ok")
@@ -29,6 +35,13 @@ data:
         -> enableAccessLog(5) -> "http://127.0.0.1:5000";
 
     default: * -> status(404) -> <shunt>;
+
+  registry.eskip: |-
+    healthz: Path("/healthz") -> inlineContent("ok")
+        -> disableAccessLog() -> <shunt>;
+
+    default: *
+        -> enableAccessLog(5) -> "http://127.0.0.1:8080";
 
   registry.yaml: |-
     version: 0.1
@@ -89,10 +102,10 @@ data:
     {{- end }}
 
     {{- if .Values.registry.enabled }}
-    [registry."{{ include "github-actions.fullname" . }}-registry"]
+    [registry."{{ include "github-actions.fullname" . }}-registry.{{ $.Release.Namespace }}.svc"]
       http = true
     [registry."{{ .Values.registry.name }}"]
-      endpoint = ["http://{{ include "github-actions.fullname" $ }}-registry"]
+      endpoint = ["http://{{ include "github-actions.fullname" $ }}-registry.{{ $.Release.Namespace }}.svc"]
     {{- end }}
 
   daemon.json: |-
