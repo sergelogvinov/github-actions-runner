@@ -110,7 +110,10 @@ COPY --from=amazon/aws-cli:2.9.18 /usr/local/aws-cli /usr/local/aws-cli
 RUN ln -s /usr/local/aws-cli/v2/current/bin/aws /usr/local/bin/aws
 
 ENV HELM_DATA_HOME=/usr/local/share/helm
-RUN helm plugin install https://github.com/jkroepke/helm-secrets --version v3.15.0
+RUN helm plugin install https://github.com/jkroepke/helm-secrets --version v3.15.0 && \
+    helm repo add bitnami  https://charts.bitnami.com/bitnami && \
+    helm repo add sinextra https://helm-charts.sinextra.dev && \
+    helm repo update
 
 USER github
 WORKDIR /app
