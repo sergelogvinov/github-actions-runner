@@ -127,10 +127,10 @@ spec:
           resources:
             limits:
               cpu: 500m
-              memory: 256Mi
+              memory: 512Mi
             requests:
               cpu: 100m
-              memory: 16Mi
+              memory: 128Mi
           volumeMounts:
             - name: cache
               mountPath: /var/lib/registry

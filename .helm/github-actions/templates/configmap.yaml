@@ -51,8 +51,6 @@ data:
       level: warn
       formatter: json
     storage:
-      cache:
-        blobdescriptor: inmemory
       maintenance:
         uploadpurging:
           enabled: true
