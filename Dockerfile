@@ -86,9 +86,10 @@ RUN apt-get update && apt-get install -y docker.io && \
     mv /tmp/reviewdog /usr/bin/reviewdog && \
     rm -rf /tmp/*
 
-COPY --from=docker:20.10-cli /usr/libexec/docker/cli-plugins/docker-compose /usr/libexec/docker/cli-plugins/docker-compose
-COPY --from=docker/buildx-bin:0.10.4 /buildx /usr/libexec/docker/cli-plugins/docker-buildx
-COPY --from=aquasec/trivy:0.38.3 /usr/local/bin/trivy /usr/local/bin/trivy
+# https://hub.docker.com/_/docker/tags
+COPY --from=docker:23.0.6-cli /usr/local/libexec/docker/cli-plugins/docker-compose /usr/local/libexec/docker/cli-plugins/docker-compose
+COPY --from=docker/buildx-bin:0.10.4 /buildx /usr/local/libexec/docker/cli-plugins/docker-buildx
+COPY --from=ghcr.io/aquasecurity/trivy:0.41.0 /usr/local/bin/trivy /usr/local/bin/trivy
 
 ARG HELM_VERSION=3.11.0 NERDCTL_VERSION=1.2.0
 RUN wget https://dl.k8s.io/v1.23.3/kubernetes-client-linux-amd64.tar.gz -O /tmp/kubernetes-client-linux-amd64.tar.gz && \
@@ -106,7 +107,7 @@ RUN wget https://dl.k8s.io/v1.23.3/kubernetes-client-linux-amd64.tar.gz -O /tmp/
 # helm hooks error log https://github.com/helm/helm/pull/11228
 COPY --from=helm --chown=root:root /go/src/bin/helm /usr/bin/helm
 
-COPY --from=amazon/aws-cli:2.9.18 /usr/local/aws-cli /usr/local/aws-cli
+COPY --from=amazon/aws-cli:2.11.19 /usr/local/aws-cli /usr/local/aws-cli
 RUN ln -s /usr/local/aws-cli/v2/current/bin/aws /usr/local/bin/aws
 
 ENV HELM_DATA_HOME=/usr/local/share/helm
@@ -118,10 +119,10 @@ RUN helm plugin install https://github.com/jkroepke/helm-secrets --version v3.15
 USER github
 WORKDIR /app
 
-ENV GITHUB_VERSION=2.303.0
+ENV GITHUB_VERSION=2.304.0
 RUN wget https://github.com/actions/runner/releases/download/v${GITHUB_VERSION}/actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz \
         -O actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz && \
-    echo "e4a9fb7269c1a156eb5d5369232d0cd62e06bec2fd2b321600e85ac914a9cc73  actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz" | shasum -a 256 -c && \
+    echo "292e8770bdeafca135c2c06cd5426f9dda49a775568f45fcc25cc2b576afc12f  actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz" | shasum -a 256 -c && \
     tar xzf ./actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz && \
     rm -f actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz
 
