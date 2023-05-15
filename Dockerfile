@@ -7,7 +7,7 @@ RUN make build-linux
 
 ###
 
-FROM alpine:3.17 AS docker-host
+FROM alpine:3.18 AS docker-host
 LABEL org.opencontainers.image.source https://github.com/sergelogvinov/github-actions-runner
 
 RUN apk --update add docker device-mapper && \
