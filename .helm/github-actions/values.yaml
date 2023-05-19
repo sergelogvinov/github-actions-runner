@@ -40,7 +40,7 @@ securityContext:
   allowPrivilegeEscalation: false
   seccompProfile:
     type: RuntimeDefault
-  runAsUser: 1000
+  runAsUser: 1001
   runAsGroup: 0
   capabilities:
     drop: ["ALL"]
