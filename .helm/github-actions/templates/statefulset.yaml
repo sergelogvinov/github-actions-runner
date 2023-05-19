@@ -36,7 +36,7 @@ spec:
       serviceAccountName: {{ include "github-actions.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      terminationGracePeriodSeconds: 120
+      terminationGracePeriodSeconds: 3600
       initContainers:
         {{- if .Values.initScript }}
         - name: {{ .Chart.Name }}-init

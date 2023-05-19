@@ -35,7 +35,7 @@ else
             | jq -r '.token')"
     fi
 
-    /app/config.sh \
+    /home/runner/config.sh \
         --url $RUNNER_URL \
         --token $RUNNER_TOKEN \
         --name $RUNNER_NAME \
@@ -47,4 +47,5 @@ else
     unset GITHUB_ACCESS_TOKEN
 fi
 
-exec /usr/sbin/immortal -w 15 -n -l /dev/stdout -d /app /app/bin/Runner.Listener run --startuptype service
+nodever=${GITHUB_ACTIONS_RUNNER_FORCED_NODE_VERSION:-node16}
+exec /home/runner/externals/$nodever/bin/node /home/runner/bin/RunnerService.js

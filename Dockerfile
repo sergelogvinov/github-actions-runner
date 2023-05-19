@@ -62,8 +62,10 @@ ENTRYPOINT ["/usr/sbin/immortaldir","/etc/immortal"]
 
 ###
 
-FROM debian:11-slim AS github-actions-runner
-LABEL org.opencontainers.image.source https://github.com/sergelogvinov/github-actions-runner
+FROM ghcr.io/actions/actions-runner:2.304.0 AS github-actions-runner
+LABEL org.opencontainers.image.source="https://github.com/sergelogvinov/github-actions-runner"
+
+USER root
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update -y && apt-get dist-upgrade -y && \
@@ -73,9 +75,8 @@ RUN apt-get update -y && apt-get dist-upgrade -y && \
     apt-get install -y python3-boto python3-jmespath && \
     ln -s /usr/bin/python3 /usr/bin/python
 
-RUN adduser --disabled-password --home /home/github --uid 1000 --gecos "GitHubAgent" github && \
-    install -m 0775 -o github -g github -d /app && \
-    install -m 0775 -o github -g github -d /home/github/.ansible -d /home/github/builds
+RUN install -m 0775 -o runner -g runner -d /app && \
+    install -m 0775 -o runner -g runner -d /home/github -d /home/github/.ansible -d /home/github/builds
 
 ENV REVIEWDOG_VERSION=0.14.1
 RUN apt-get update && apt-get install -y docker.io && \
@@ -116,24 +117,15 @@ RUN helm plugin install https://github.com/jkroepke/helm-secrets --version v3.15
     helm repo add sinextra https://helm-charts.sinextra.dev && \
     helm repo update
 
-USER github
+USER runner
 WORKDIR /app
-
-ENV GITHUB_VERSION=2.304.0
-RUN wget https://github.com/actions/runner/releases/download/v${GITHUB_VERSION}/actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz \
-        -O actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz && \
-    echo "292e8770bdeafca135c2c06cd5426f9dda49a775568f45fcc25cc2b576afc12f  actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz" | shasum -a 256 -c && \
-    tar xzf ./actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz && \
-    rm -f actions-runner-linux-x64-${GITHUB_VERSION}.tar.gz
-
-USER root
-RUN /app/bin/installdependencies.sh
-USER github
 
 ENV RUNNER_WORK_FOLDER=/home/github/builds
 
-COPY entrypoint.sh /entrypoint.sh
+COPY scripts/ /
 COPY etc/ansible.cfg /etc/ansible/ansible.cfg
-COPY --from=immortal /go/src/github.com/immortal/immortal/build/amd64/ /usr/sbin/
+COPY RunnerService.js /home/runner/bin/RunnerService.js
 
+ENV ACTIONS_RUNNER_PRINT_LOG_TO_STDOUT=0
+ENV ACTIONS_RUNNER_HOOK_JOB_COMPLETED=/shutdown_check.sh
 ENTRYPOINT [ "/entrypoint.sh" ]
