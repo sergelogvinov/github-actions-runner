@@ -62,7 +62,7 @@ ENTRYPOINT ["/usr/sbin/immortaldir","/etc/immortal"]
 
 ###
 
-FROM ghcr.io/actions/actions-runner:2.304.0 AS github-actions-runner
+FROM ghcr.io/actions/actions-runner:2.305.0 AS github-actions-runner
 LABEL org.opencontainers.image.source="https://github.com/sergelogvinov/github-actions-runner"
 
 USER root
@@ -76,7 +76,8 @@ RUN apt-get update -y && apt-get dist-upgrade -y && \
     ln -s /usr/bin/python3 /usr/bin/python
 
 RUN install -m 0775 -o runner -g runner -d /app && \
-    install -m 0775 -o runner -g runner -d /home/github -d /home/github/.ansible -d /home/github/builds
+    install -m 0775 -o runner -g runner -d /home/github -d /home/github/.ansible -d /home/github/builds && \
+    install -m 0775 -o runner -g runner -d /home/runner -d /home/runner/.ansible
 
 ENV REVIEWDOG_VERSION=0.14.1
 RUN apt-get update && apt-get install -y docker.io && \
@@ -90,26 +91,23 @@ RUN apt-get update && apt-get install -y docker.io && \
 # https://hub.docker.com/_/docker/tags
 COPY --from=docker:23.0.6-cli /usr/local/libexec/docker/cli-plugins/docker-compose /usr/local/libexec/docker/cli-plugins/docker-compose
 COPY --from=docker/buildx-bin:0.10.4 /buildx /usr/local/libexec/docker/cli-plugins/docker-buildx
-COPY --from=ghcr.io/aquasecurity/trivy:0.41.0 /usr/local/bin/trivy /usr/local/bin/trivy
+COPY --from=ghcr.io/sergelogvinov/skopeo:1.12.0 /usr/bin/skopeo /usr/bin/skopeo
+COPY --from=ghcr.io/aquasecurity/trivy:0.42.1 /usr/local/bin/trivy /usr/local/bin/trivy
 
-ARG HELM_VERSION=3.11.0 NERDCTL_VERSION=1.2.0
-RUN wget https://dl.k8s.io/v1.23.3/kubernetes-client-linux-amd64.tar.gz -O /tmp/kubernetes-client-linux-amd64.tar.gz && \
-    cd /tmp && tar -xzf /tmp/kubernetes-client-linux-amd64.tar.gz && mv kubernetes/client/bin/kubectl /usr/bin/kubectl && \
-    wget https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz -O /tmp/helm.tar.gz && \
-    echo "6c3440d829a56071a4386dd3ce6254eab113bc9b1fe924a6ee99f7ff869b9e0b /tmp/helm.tar.gz" | sha256sum -c - && \
-    cd /tmp && tar -xzf /tmp/helm.tar.gz && mv linux-amd64/helm /usr/bin/helm && rm -rf /tmp/* && \
-    wget https://github.com/containerd/nerdctl/releases/download/v${NERDCTL_VERSION}/nerdctl-${NERDCTL_VERSION}-linux-amd64.tar.gz -O /tmp/nerdctl.tar.gz && \
-    echo "9d6f3427a1c0af0c38a0a707751b424d04cca13b82c62ad03ec3f4799c2de48c /tmp/nerdctl.tar.gz" | sha256sum -c - && \
-    cd /tmp && tar -xzf /tmp/nerdctl.tar.gz && mv nerdctl /usr/bin/nerdctl && rm -rf /tmp/* && \
-    wget https://github.com/mozilla/sops/releases/download/v3.7.3/sops-v3.7.3.linux -O /tmp/sops && \
-    echo "913515e57d0112840540dc3c56370ff9 /tmp/sops" | md5sum -c - && \
-    install -o root -g root /tmp/sops /usr/bin/sops && rm -rf /tmp/*
+COPY --from=bitnami/kubectl:1.24.15 /opt/bitnami/kubectl/bin/kubectl /usr/local/bin/kubectl
+COPY --from=alpine/helm:3.12.0 /usr/bin/helm /usr/bin/helm
+COPY --from=ghcr.io/sergelogvinov/sops:3.7.3  /usr/bin/sops /usr/bin/sops
+COPY --from=ghcr.io/sergelogvinov/vals:0.25.0 /usr/bin/vals /usr/bin/vals
 
 # helm hooks error log https://github.com/helm/helm/pull/11228
 COPY --from=helm --chown=root:root /go/src/bin/helm /usr/bin/helm
 
 COPY --from=amazon/aws-cli:2.11.19 /usr/local/aws-cli /usr/local/aws-cli
 RUN ln -s /usr/local/aws-cli/v2/current/bin/aws /usr/local/bin/aws
+RUN apt-get update && apt-get install -y apt-transport-https ca-certificates gnupg && \
+    echo "deb https://packages.cloud.google.com/apt cloud-sdk main" > /etc/apt/sources.list.d/google-cloud-sdk.list && \
+    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - && \
+    apt-get update && apt-get install -y google-cloud-sdk
 
 ENV HELM_DATA_HOME=/usr/local/share/helm
 RUN helm plugin install https://github.com/jkroepke/helm-secrets --version v3.15.0 && \
@@ -124,8 +122,6 @@ ENV RUNNER_WORK_FOLDER=/home/github/builds
 
 COPY scripts/ /
 COPY etc/ansible.cfg /etc/ansible/ansible.cfg
-COPY RunnerService.js /home/runner/bin/RunnerService.js
 
 ENV ACTIONS_RUNNER_PRINT_LOG_TO_STDOUT=0
-ENV ACTIONS_RUNNER_HOOK_JOB_COMPLETED=/shutdown_check.sh
 ENTRYPOINT [ "/entrypoint.sh" ]
