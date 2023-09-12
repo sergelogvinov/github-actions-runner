@@ -62,15 +62,15 @@ ENTRYPOINT ["/usr/sbin/immortaldir","/etc/immortal"]
 
 ###
 
-FROM ghcr.io/actions/actions-runner:2.305.0 AS github-actions-runner
+FROM ghcr.io/actions/actions-runner:2.309.0 AS github-actions-runner
 LABEL org.opencontainers.image.source="https://github.com/sergelogvinov/github-actions-runner"
 
 USER root
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update -y && apt-get dist-upgrade -y && \
-    apt-get install -y --no-install-recommends software-properties-common procps vim-tiny \
-        curl wget make zip rsync \
+    apt-get install -y --no-install-recommends procps vim-tiny \
+        curl wget make zip rsync git \
         ansible ansible-lint yamllint jq && \
     apt-get install -y python3-boto python3-jmespath && \
     ln -s /usr/bin/python3 /usr/bin/python
@@ -79,29 +79,21 @@ RUN install -m 0775 -o runner -g runner -d /app && \
     install -m 0775 -o runner -g runner -d /home/github -d /home/github/.ansible -d /home/github/builds && \
     install -m 0775 -o runner -g runner -d /home/runner -d /home/runner/.ansible
 
-ENV REVIEWDOG_VERSION=0.14.1
-RUN apt-get update && apt-get install -y docker.io && \
-    wget https://github.com/reviewdog/reviewdog/releases/download/v${REVIEWDOG_VERSION}/reviewdog_${REVIEWDOG_VERSION}_Linux_x86_64.tar.gz \
-        -O /tmp/reviewdog.tar.gz  && \
-    echo "bf0ada422e13a94aafb26bcd8ade3ae6d98e6a3db4a9c1cb17686ee64e021314  /tmp/reviewdog.tar.gz" | shasum -a 256 -c && \
-    cd /tmp && tar --no-same-owner -xzf /tmp/reviewdog.tar.gz && \
-    mv /tmp/reviewdog /usr/bin/reviewdog && \
-    rm -rf /tmp/*
-
 # https://hub.docker.com/_/docker/tags
 COPY --from=docker:23.0.6-cli /usr/local/libexec/docker/cli-plugins/docker-compose /usr/local/libexec/docker/cli-plugins/docker-compose
-COPY --from=docker/buildx-bin:0.10.4 /buildx /usr/local/libexec/docker/cli-plugins/docker-buildx
+COPY --from=docker/buildx-bin:0.11.2 /buildx /usr/local/libexec/docker/cli-plugins/docker-buildx
 COPY --from=ghcr.io/sergelogvinov/skopeo:1.13.0 /usr/bin/skopeo /usr/bin/skopeo
 COPY --from=ghcr.io/sergelogvinov/skopeo:1.13.0 /etc/containers/ /etc/containers/
-COPY --from=ghcr.io/aquasecurity/trivy:0.42.1 /usr/local/bin/trivy /usr/local/bin/trivy
+COPY --from=ghcr.io/aquasecurity/trivy:0.44.1 /usr/local/bin/trivy /usr/local/bin/trivy
+COPY --from=ghcr.io/sergelogvinov/reviewdog:0.14.2 /usr/bin/reviewdog /usr/bin/reviewdog
 
 COPY --from=bitnami/kubectl:1.24.15 /opt/bitnami/kubectl/bin/kubectl /usr/local/bin/kubectl
-COPY --from=alpine/helm:3.12.1 /usr/bin/helm /usr/bin/helm
+COPY --from=alpine/helm:3.12.3 /usr/bin/helm /usr/bin/helm
 COPY --from=ghcr.io/sergelogvinov/sops:3.7.3  /usr/bin/sops /usr/bin/sops
 COPY --from=ghcr.io/sergelogvinov/vals:0.25.0 /usr/bin/vals /usr/bin/vals
 
 # helm hooks error log https://github.com/helm/helm/pull/11228
-COPY --from=helm --chown=root:root /go/src/bin/helm /usr/bin/helm
+# COPY --from=helm --chown=root:root /go/src/bin/helm /usr/bin/helm
 
 COPY --from=amazon/aws-cli:2.11.19 /usr/local/aws-cli /usr/local/aws-cli
 RUN ln -s /usr/local/aws-cli/v2/current/bin/aws /usr/local/bin/aws

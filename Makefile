@@ -20,10 +20,10 @@ help:
 build: ## Build project
 	docker build $(BUILDARG) --rm -t local/github-actions-runner:$(CODE_TAG) \
 		-f Dockerfile --target=github-actions-runner .
-	docker build $(BUILDARG) --rm -t local/docker:$(CODE_TAG) \
-		-f Dockerfile --target=docker-host .
-	docker build $(BUILDARG) --rm -t local/containerd:$(CODE_TAG) \
-		-f Dockerfile --target=containerd-host .
+	# docker build $(BUILDARG) --rm -t local/docker:$(CODE_TAG) \
+	# 	-f Dockerfile --target=docker-host .
+	# docker build $(BUILDARG) --rm -t local/containerd:$(CODE_TAG) \
+	# 	-f Dockerfile --target=containerd-host .
 
 run: ## Run locally
 	docker rm -f github-actions-runner 2>/dev/null ||:
@@ -38,11 +38,11 @@ push: ## Push image to registry
 	docker tag local/github-actions-runner:$(CODE_TAG) $(REGISTRY)/github-actions-runner:$(CODE_TAG)
 	docker push $(REGISTRY)/github-actions-runner:$(CODE_TAG)
 
-	docker tag local/docker:$(CODE_TAG) $(REGISTRY)/docker:$(CODE_TAG)
-	docker push $(REGISTRY)/docker:$(CODE_TAG)
+	# docker tag local/docker:$(CODE_TAG) $(REGISTRY)/docker:$(CODE_TAG)
+	# docker push $(REGISTRY)/docker:$(CODE_TAG)
 
-	docker tag local/containerd:$(CODE_TAG) $(REGISTRY)/containerd:$(CODE_TAG)
-	docker push $(REGISTRY)/containerd:$(CODE_TAG)
+	# docker tag local/containerd:$(CODE_TAG) $(REGISTRY)/containerd:$(CODE_TAG)
+	# docker push $(REGISTRY)/containerd:$(CODE_TAG)
 
 deploy: ## Deploy to k8s
 	touch .helm/build-machine/values-dev.yaml
