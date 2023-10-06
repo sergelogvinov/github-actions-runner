@@ -1,5 +1,5 @@
 #
-FROM golang:1.19-buster AS immortal
+FROM golang:1.20-buster AS immortal
 
 WORKDIR /go/src/github.com/immortal/immortal
 RUN git clone --single-branch --branch 0.24.3 --depth 1 https://github.com/immortal/immortal.git .
@@ -23,7 +23,7 @@ ENTRYPOINT ["/usr/bin/dockerd","-H","tcp://0.0.0.0:2376"]
 
 ###
 
-FROM golang:1.18-bullseye AS helm
+FROM golang:1.20-bullseye AS helm
 
 WORKDIR /go/src/
 RUN git clone --single-branch --depth 2 --branch hooks-logs https://github.com/sergelogvinov/helm.git .
